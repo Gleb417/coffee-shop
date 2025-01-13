@@ -1,0 +1,174 @@
+/* assets/styles.css */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+/* Основные цвета кофейни */
+:root {
+    --coffee-brown: #3e2b1d;
+    --golden-beige: #ad8c62;
+    --light-beige: #f5f1e1;
+    --dark-coffee: #2a1b13;
+    --light-coffee: #d1b39d;
+    --cream: #f3e5c3;
+  }
+  
+  /* Основные стили */
+  body {
+    font-family: 'Arial', sans-serif;
+    background-color: var(--light-beige);
+    color: var(--dark-coffee);
+    margin: 0;
+    padding: 0;
+  }
+  
+  h1, h2, h3, h4 {
+    font-family: 'Georgia', serif;
+    margin: 0;
+  }
+  
+  a {
+    color: var(--coffee-brown);
+    text-decoration: none;
+  }
+  
+  a:hover {
+    color: var(--golden-beige);
+    text-decoration: underline;
+  }
+  
+  /* Контейнер для всех страниц */
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  /* Стили для header */
+  header {
+    background-color: var(--light-coffee);
+    padding: 30px 0;
+    text-align: center;
+  }
+  
+  header h1 {
+    color: var(--coffee-brown);
+    font-size: 2.5rem;
+    margin: 0;
+  }
+  
+  header nav {
+    margin-top: 20px;
+  }
+  
+  header nav a {
+    color: var(--coffee-brown);
+    text-decoration: none;
+    font-size: 1.2rem;
+    margin: 0 15px;
+    transition: color 0.3s ease, transform 0.3s ease;
+  }
+  
+  header nav a:hover {
+    color: var(--golden-beige);
+    transform: scale(1.1);
+  }
+  
+  /* Стили для карточек продуктов */
+  .product-card {
+    background-color: var(--light-coffee);
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+  }
+  
+  .product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    background-color: var(--cream); /* Мелкая анимация на фоне при наведении */
+  }
+  
+  .product-card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 8px;
+  }
+  
+  .product-card h3 {
+    font-size: 1.5em;
+    color: var(--dark-coffee);
+  }
+  
+  .product-card p {
+    font-size: 1em;
+    color: var(--coffee-brown);
+  }
+  
+  .product-card .btn {
+    padding: 10px 15px;
+    background-color: var(--golden-beige);
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+  }
+  
+  .product-card .btn:hover {
+    background-color: var(--coffee-brown);
+    color: var(--cream);
+  }
+  
+  /* Стили для слайдера */
+  .swiper-container {
+    width: 100%;
+    height: 100%;
+    max-height: 500px;
+    position: relative;
+  }
+  
+  .swiper-image {
+    width: 100%;
+    object-fit: cover;
+    border-radius: 10px;
+  }
+  
+  /* Стили для футера */
+  footer {
+    background-color: var(--coffee-brown);
+    color: var(--cream);
+    text-align: center;
+    padding: 20px;
+    margin-top: 40px;
+  }
+  
+  footer p {
+    margin: 0;
+    font-size: 1rem;
+  }
+  
+  footer a {
+    color: var(--cream);
+  }
+  
+  footer a:hover {
+    text-decoration: underline;
+  }
+  
+  /* Стили для кнопок */
+  .btn {
+    background-color: var(--golden-beige);
+    padding: 12px 20px;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 1.2rem;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+  }
+  
+  .btn:hover {
+    background-color: var(--coffee-brown);
+    transform: scale(1.05);
+  }
+  
