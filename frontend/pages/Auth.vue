@@ -19,6 +19,7 @@
         isLogin ? "Нет аккаунта? Зарегистрируйтесь" : "Есть аккаунт? Войдите"
       }}
     </p>
+    <a href="/" class="home-button" style="padding-right: 0px">На главную</a>
   </div>
 </template>
 
@@ -69,6 +70,7 @@ const toggleForm = () => {
   border: 1px solid #ccc;
   border-radius: 8px;
   background-color: #fff;
+  position: relative; /* Для абсолютного позиционирования кнопки "На главную" */
 }
 
 h2 {
@@ -116,5 +118,23 @@ button:hover {
 
 .toggle-form:hover {
   text-decoration: underline;
+}
+
+.home-button {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  background-color: #cca763;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 1.2rem;
+  text-align: center;
+  margin-top: 10px;
+  cursor: pointer;
+  position: relative; /* Для выравнивания с другими элементами */
+}
+.home-button:hover {
+  background-color: #b88a4d;
 }
 </style>

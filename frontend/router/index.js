@@ -26,6 +26,11 @@ const routes = [
     path: '/auth',
     component: () => import('.../pages/auth.vue'),
   },
+  {
+    path: '/profile',
+    name: 'Profile',
+    component: () => import('@/views/Profile.vue'), // Укажите путь к компоненту страницы профиля
+  }
 ];
 
 const router = createRouter({
