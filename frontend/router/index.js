@@ -29,8 +29,19 @@ const routes = [
   {
     path: '/profile',
     name: 'Profile',
-    component: () => import('@/views/Profile.vue'), // Укажите путь к компоненту страницы профиля
+    component: () => import('@/pages/profile.vue'), // Укажите путь к компоненту страницы профиля
+  },
+  {
+    path: '/product/:id',
+    name: 'ProductDetail',
+    component: ProductDetail,
+    props: true, // Передача параметров в виде пропсов
+  },
+  {
+    path: '/cart',
+    component: () => import('.../pages/cart.vue'),
   }
+  
 ];
 
 const router = createRouter({
