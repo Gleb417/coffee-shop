@@ -1,12 +1,25 @@
 import express from 'express'
+import authRoutes from './routes/authRoutes.js'
+import sequelize from './config/database.js'
 
 const app = express()
-const port = process.env.PORT || 3001
 
-app.get('/', (req, res) => {
-	res.send('Hello World!')
-})
+app.use(express.json())
 
-app.listen(port, () => {
-	console.log(`Server is running on http://localhost:${port}`)
-})
+// Подключение маршрутов
+app.use('/auth', authRoutes)
+
+const PORT = process.env.PORT || 3001
+
+// Синхронизация базы данных и запуск сервера
+sequelize
+	.sync()
+	.then(() => {
+		console.log('Синхронизация прошла успешно')
+		app.listen(PORT, () => {
+			console.log(`Сервер запущен на порту ${PORT}`)
+		})
+	})
+	.catch(error => {
+		console.error('Error connecting to the database', error)
+	})
