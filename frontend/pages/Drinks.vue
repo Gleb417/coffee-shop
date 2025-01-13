@@ -8,7 +8,10 @@
 
     <div class="products">
       <!-- Карточка 1 -->
-      <div class="product-card">
+      <router-link
+        :to="{ name: 'ProductDetail', params: { id: 1 } }"
+        class="product-card"
+      >
         <img
           src="assets/images/coffee1.jpg"
           alt="Coffee"
@@ -21,10 +24,13 @@
           </p>
           <p class="product-price">250 ₽</p>
         </div>
-      </div>
+      </router-link>
 
       <!-- Карточка 2 -->
-      <div class="product-card">
+      <router-link
+        :to="{ name: 'ProductDetail', params: { id: 2 } }"
+        class="product-card"
+      >
         <img
           src="assets/images/coffee2.jpg"
           alt="Latte"
@@ -37,7 +43,7 @@
           </p>
           <p class="product-price">300 ₽</p>
         </div>
-      </div>
+      </router-link>
     </div>
 
     <!-- Подключаем Footer -->
