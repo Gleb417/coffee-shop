@@ -1,6 +1,10 @@
 import express from 'express'
+import dotenv from 'dotenv'
 import authRoutes from './routes/authRoutes.js'
 import sequelize from './config/database.js'
+import db from './models/index.js'
+
+dotenv.config()
 
 const app = express()
 
@@ -9,17 +13,17 @@ app.use(express.json())
 // Подключение маршрутов
 app.use('/auth', authRoutes)
 
-const PORT = process.env.PORT || 3001
-
-// Синхронизация базы данных и запуск сервера
-sequelize
-	.sync()
+// Настройка связей между моделями
+db.sequelize
+	.sync({ alter: true })
 	.then(() => {
-		console.log('Синхронизация прошла успешно')
-		app.listen(PORT, () => {
-			console.log(`Сервер запущен на порту ${PORT}`)
+		console.log('Синхронизация базы данных прошла успешно')
+
+		// Запуск сервера
+		app.listen(process.env.PORT || 3001, () => {
+			console.log(`Сервер запущен на порту ${process.env.PORT || 3001}`)
 		})
 	})
 	.catch(error => {
-		console.error('Error connecting to the database', error)
+		console.error('Ошибка при синхронизации базы данных:', error)
 	})
