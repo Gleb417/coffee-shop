@@ -1,12 +1,8 @@
 import { DataTypes, Model } from 'sequelize'
 import sequelize from '../config/database.js'
+import { Order, OrderItem } from '../Order/OrderModel.js'
 
-class User extends Model {
-	static associate(models) {
-		// Один пользователь может иметь много заказов
-		User.hasMany(models.Order, { foreignKey: 'user_id', onDelete: 'CASCADE' })
-	}
-}
+class User extends Model {}
 
 User.init(
 	{
@@ -49,5 +45,4 @@ User.init(
 		],
 	}
 )
-
 export default User

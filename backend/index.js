@@ -1,20 +1,22 @@
 import express from 'express'
 import dotenv from 'dotenv'
-import authRoutes from './routes/authRoutes.js'
+import bodyParser from 'body-parser'
+import cors from 'cors'
 import sequelize from './config/database.js'
-import db from './models/index.js'
-
+import orderRouter from './Order/OrderRouter.js'
+import UserRouter from './User/UserRouter.js'
 dotenv.config()
 
 const app = express()
+app.use(cors())
 
 app.use(express.json())
-
+app.use(bodyParser.json()) // Для обработки JSON-запросов
 // Подключение маршрутов
-app.use('/auth', authRoutes)
-
+app.use('/api/user', UserRouter)
+app.use('/api/orders', orderRouter)
 // Настройка связей между моделями
-db.sequelize
+sequelize
 	.sync({ alter: true })
 	.then(() => {
 		console.log('Синхронизация базы данных прошла успешно')
