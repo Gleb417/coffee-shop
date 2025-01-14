@@ -94,3 +94,22 @@ export const updateProduct = async (req, res) => {
 		res.status(500).json({ error: error.message })
 	}
 }
+
+// Удаление продукта
+export const deleteProduct = async (req, res) => {
+	try {
+		const { id } = req.params
+
+		// Проверка на существование продукта
+		const product = await Product.findByPk(id)
+		if (!product) {
+			return res.status(404).json({ error: 'Продукт не найден' })
+		}
+
+		// Удаление продукта
+		await product.destroy()
+		res.status(200).json({ message: 'Продукт успешно удалён' })
+	} catch (error) {
+		res.status(500).json({ error: error.message })
+	}
+}

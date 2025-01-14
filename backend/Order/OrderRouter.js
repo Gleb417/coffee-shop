@@ -6,10 +6,12 @@ import {
 	getOrderById,
 	createOrder,
 	updateOrder,
+	deleteOrder,
 	getAllOrderItems,
 	getOrderItemsByOrderId,
 	createOrderItem,
 	updateOrderItem,
+	deleteOrderItem,
 } from './OrderController.js'
 
 const orderRouter = express.Router()
@@ -26,6 +28,9 @@ orderRouter.post('/order/create', createOrder)
 // Обновить заказ
 orderRouter.put('/order/update/:id', updateOrder)
 
+// Удалить заказ
+orderRouter.delete('/order/delete/:id', deleteOrder)
+
 // Получить все товары в заказах
 orderRouter.get('/orderItem/get', getAllOrderItems)
 
@@ -37,5 +42,8 @@ orderRouter.post('/orderItem/create', createOrderItem)
 
 // Обновить товар в заказе
 orderRouter.put('/orderItem/update/:order_id/:product_id', updateOrderItem)
+
+// Удалить товар в заказе
+orderRouter.delete('/orderItem/delete/:id', deleteOrderItem)
 
 export default orderRouter

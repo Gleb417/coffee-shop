@@ -94,3 +94,22 @@ export const getUserById = async (req, res) => {
 		res.status(500).json({ error: error.message })
 	}
 }
+
+// Удаление пользователя
+export const deleteUser = async (req, res) => {
+	try {
+		const { id } = req.params
+
+		// Проверка на существование пользователя
+		const user = await User.findByPk(id)
+		if (!user) {
+			return res.status(404).json({ message: 'Пользователь не найден' })
+		}
+
+		// Удаление пользователя
+		await user.destroy()
+		res.status(200).json({ message: 'Пользователь успешно удален' })
+	} catch (error) {
+		res.status(500).json({ error: error.message })
+	}
+}

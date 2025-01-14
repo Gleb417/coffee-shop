@@ -76,3 +76,22 @@ export const updateSubcategory = async (req, res) => {
 		res.status(500).json({ error: error.message })
 	}
 }
+
+// Удаление подкатегории
+export const deleteSubcategory = async (req, res) => {
+	try {
+		const { id } = req.params
+
+		// Проверка на существование подкатегории
+		const subcategory = await Subcategory.findByPk(id)
+		if (!subcategory) {
+			return res.status(404).json({ error: 'Подкатегория не найдена' })
+		}
+
+		// Удаление подкатегории
+		await subcategory.destroy()
+		res.status(200).json({ message: 'Подкатегория успешно удалена' })
+	} catch (error) {
+		res.status(500).json({ error: error.message })
+	}
+}

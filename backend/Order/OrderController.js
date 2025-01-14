@@ -68,6 +68,24 @@ export const updateOrder = async (req, res) => {
 	}
 }
 
+// Удалить заказ
+export const deleteOrder = async (req, res) => {
+	try {
+		const { id } = req.params
+
+		// Проверка на существование заказа
+		const order = await Order.findByPk(id)
+		if (!order) {
+			return res.status(404).json({ message: 'Order not found' })
+		}
+
+		// Удаление заказа
+		await order.destroy()
+		res.status(200).json({ message: 'Order deleted successfully' })
+	} catch (error) {
+		res.status(500).json({ message: 'Error deleting order', error })
+	}
+}
 // Получить все товары в заказах
 export const getAllOrderItems = async (req, res) => {
 	try {
@@ -130,5 +148,24 @@ export const updateOrderItem = async (req, res) => {
 		res.status(200).json(orderItem)
 	} catch (error) {
 		res.status(500).json({ message: 'Error updating order item', error })
+	}
+}
+
+// Удалить товар в заказе
+export const deleteOrderItem = async (req, res) => {
+	try {
+		const { id } = req.params
+
+		// Проверка на существование товара в заказе
+		const orderItem = await OrderItem.findByPk(id)
+		if (!orderItem) {
+			return res.status(404).json({ message: 'Order item not found' })
+		}
+
+		// Удаление товара в заказе
+		await orderItem.destroy()
+		res.status(200).json({ message: 'Order item deleted successfully' })
+	} catch (error) {
+		res.status(500).json({ message: 'Error deleting order item', error })
 	}
 }
