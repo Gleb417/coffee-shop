@@ -69,17 +69,18 @@ OrderItem.init(
 		timestamps: false,
 	}
 )
-// Один заказ принадлежит одному пользователю
+// Ассоциации
 Order.belongsTo(User, { foreignKey: 'user_id', onDelete: 'CASCADE' })
-// Один заказ может иметь много товаров
 Order.hasMany(OrderItem, {
 	foreignKey: 'order_id',
+	as: 'items', // Убедитесь, что `as` совпадает с тем, что используете в `include`
 	onDelete: 'CASCADE',
 })
 
-// Один товар в заказе принадлежит одному заказу
 OrderItem.belongsTo(Order, {
 	foreignKey: 'order_id',
+	as: 'order', // Этот `as` может не использоваться в данном случае
 	onDelete: 'CASCADE',
 })
+
 export { Order, OrderItem }

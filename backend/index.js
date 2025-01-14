@@ -5,6 +5,9 @@ import cors from 'cors'
 import sequelize from './config/database.js'
 import orderRouter from './Order/OrderRouter.js'
 import UserRouter from './User/UserRouter.js'
+import CategoryRouter from './Category/CategoryRouter.js'
+import SubcategoryRouter from './Subcategory/SubcategoryRouter.js'
+import ProductRouter from './Product/ProductRouter.js'
 dotenv.config()
 
 const app = express()
@@ -15,6 +18,9 @@ app.use(bodyParser.json()) // Для обработки JSON-запросов
 // Подключение маршрутов
 app.use('/api/user', UserRouter)
 app.use('/api/orders', orderRouter)
+app.use('/api/categories', CategoryRouter)
+app.use('/api/subcategory', SubcategoryRouter)
+app.use('/api/product', ProductRouter)
 // Настройка связей между моделями
 sequelize
 	.sync({ alter: true })
