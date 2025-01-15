@@ -1,6 +1,7 @@
 import { DataTypes, Model } from 'sequelize'
 import sequelize from '../config/database.js'
 import User from '../User/UserModel.js'
+import Product from '../Product/ProductModel.js'
 
 class Order extends Model {}
 
@@ -83,4 +84,15 @@ OrderItem.belongsTo(Order, {
 	onDelete: 'CASCADE',
 })
 
+OrderItem.belongsTo(Product, {
+	foreignKey: 'product_id',
+	as: 'product', // Связь с продуктами
+	onDelete: 'CASCADE',
+})
+
+Product.hasMany(OrderItem, {
+	foreignKey: 'product_id',
+	as: 'orderItems', // Если нужно использовать в include
+	onDelete: 'CASCADE',
+})
 export { Order, OrderItem }

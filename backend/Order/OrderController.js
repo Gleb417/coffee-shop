@@ -1,6 +1,7 @@
 // controllers/OrderController.js
 
 import { Order, OrderItem } from './OrderModel.js'
+import Product from '../Product/ProductModel.js'
 
 // Получить все заказы
 export const getAllOrders = async (req, res) => {
@@ -17,24 +18,44 @@ export const getAllOrders = async (req, res) => {
 // Получить заказ по ID
 export const getOrdersByUserId = async (req, res) => {
 	try {
-		const userId = req.params.userId;
+		const userId = req.params.userId
 
-		// Получение всех заказов по user_id
+		// Получение всех заказов по user_id с подробной информацией о продуктах
 		const orders = await Order.findAll({
 			where: { user_id: userId },
-			include: [{ model: OrderItem, as: 'items' }],
-		});
+			include: [
+				{
+					model: OrderItem,
+					as: 'items',
+					include: [
+						{
+							model: Product,
+							as: 'product', // Убедитесь, что `as` совпадает с ассоциацией
+							attributes: [
+								'name',
+								'description',
+								'price',
+								'type',
+								'size',
+								'weight',
+								'filling',
+								'imageUrl',
+							], // Указываем атрибуты для выборки
+						},
+					],
+				},
+			],
+		})
 
 		if (!orders || orders.length === 0) {
-			return res.status(404).json({ message: 'Orders not found' });
+			return res.status(404).json({ message: 'Orders not found' })
 		}
 
-		res.status(200).json(orders);
+		res.status(200).json(orders)
 	} catch (error) {
-		res.status(500).json({ message: 'Error fetching orders', error });
+		res.status(500).json({ message: 'Error fetching orders', error })
 	}
-};
-
+}
 
 // Создать новый заказ
 export const createOrder = async (req, res) => {
