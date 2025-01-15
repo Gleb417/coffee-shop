@@ -7,41 +7,22 @@
     <p>Откройте для себя наши освежающие напитки.</p>
 
     <div class="products">
-      <!-- Карточка 1 -->
+      <!-- Генерация карточек товаров на основе данных из API -->
       <router-link
-        :to="{ name: 'ProductDetail', params: { id: 1 } }"
+        v-for="product in drinks"
+        :key="product.id"
+        :to="{ name: 'ProductDetail', params: { id: product.id } }"
         class="product-card"
       >
         <img
-          src="assets/images/coffee1.jpg"
-          alt="Coffee"
+          :src="product.imageUrl"
+          :alt="product.name"
           class="product-image"
         />
         <div class="product-info">
-          <h3 class="product-name">Кофе эспрессо</h3>
-          <p class="product-description">
-            Насыщенный вкус и аромат, идеально подходящий для бодрости.
-          </p>
-          <p class="product-price">250 ₽</p>
-        </div>
-      </router-link>
-
-      <!-- Карточка 2 -->
-      <router-link
-        :to="{ name: 'ProductDetail', params: { id: 2 } }"
-        class="product-card"
-      >
-        <img
-          src="assets/images/coffee2.jpg"
-          alt="Latte"
-          class="product-image"
-        />
-        <div class="product-info">
-          <h3 class="product-name">Латте</h3>
-          <p class="product-description">
-            Смесь молока и кофе для мягкого вкуса и утреннего настроения.
-          </p>
-          <p class="product-price">300 ₽</p>
+          <h3 class="product-name">{{ product.name }}</h3>
+          <p class="product-description">{{ product.description }}</p>
+          <p class="product-price">{{ product.price }} ₽</p>
         </div>
       </router-link>
     </div>
@@ -52,9 +33,26 @@
 </template>
 
 <script setup>
-// Импортируем Header и Footer компоненты
+import { ref, computed, onMounted } from "vue";
 import Header from "~/components/Header.vue";
 import Footer from "~/components/Footer.vue";
+
+const products = ref([]); // Все товары
+
+// Загружаем данные о товарах из API
+onMounted(() => {
+  fetch("http://localhost:3001/api/product/Product/get")
+    .then((response) => response.json())
+    .then((data) => {
+      products.value = data; // Сохраняем все товары
+    })
+    .catch((error) => console.error("Ошибка загрузки данных:", error));
+});
+
+// Фильтруем только товары категории "drinks"
+const drinks = computed(() =>
+  products.value.filter((product) => product.type === "drink")
+);
 </script>
 
 <style scoped>

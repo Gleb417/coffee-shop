@@ -3,31 +3,21 @@
     <!-- Подключаем Header -->
     <Header />
 
-    <h1>Торты</h1>
-    <p>Наши лучшие торты, приготовленные с любовью.</p>
+    <h1>Десерты</h1>
+    <p>Наслаждайтесь нашими сладкими угощениями.</p>
 
     <div class="products">
-      <!-- Карточка 1 -->
-      <div class="product-card">
-        <img src="assets/images/cakes1.jpg" alt="Cake" class="product-image" />
+      <!-- Отображаем карточки десертов -->
+      <div v-for="product in desserts" :key="product.id" class="product-card">
+        <img
+          :src="product.imageUrl"
+          :alt="product.name"
+          class="product-image"
+        />
         <div class="product-info">
-          <h3 class="product-name">Шоколадный торт</h3>
-          <p class="product-description">
-            Нежный шоколадный бисквит с кремом из темного шоколада.
-          </p>
-          <p class="product-price">500 ₽</p>
-        </div>
-      </div>
-
-      <!-- Карточка 2 -->
-      <div class="product-card">
-        <img src="assets/images/cakes2.jpg" alt="Cake" class="product-image" />
-        <div class="product-info">
-          <h3 class="product-name">Торт "Наполеон"</h3>
-          <p class="product-description">
-            Классический торт с хрустящими слоями и кремом.
-          </p>
-          <p class="product-price">450 ₽</p>
+          <h3 class="product-name">{{ product.name }}</h3>
+          <p class="product-description">{{ product.description }}</p>
+          <p class="product-price">{{ product.price }} ₽</p>
         </div>
       </div>
     </div>
@@ -38,9 +28,26 @@
 </template>
 
 <script setup>
-// Импортируем Header и Footer компоненты
+import { ref, computed, onMounted } from "vue";
 import Header from "~/components/Header.vue";
 import Footer from "~/components/Footer.vue";
+
+const products = ref([]); // Все товары
+
+onMounted(() => {
+  // Запрос к API для получения данных о продуктах
+  fetch("http://localhost:3001/api/product/Product/get/")
+    .then((response) => response.json())
+    .then((data) => {
+      products.value = data; // Сохраняем данные о продуктах
+    })
+    .catch((error) => console.error("Ошибка загрузки данных:", error));
+});
+
+// Фильтруем только десерты
+const desserts = computed(() =>
+  products.value.filter((product) => product.type === "cake")
+);
 </script>
 
 <style scoped>

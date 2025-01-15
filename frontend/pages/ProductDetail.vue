@@ -2,46 +2,46 @@
   <div class="product-detail">
     <Header />
     <div class="product-detail-content">
-      <h1>Карточка товара: {{ productName }}</h1>
-      <p>Описание товара: {{ productDescription }}</p>
-      <p>Цена: {{ productPrice }} ₽</p>
+      <template v-if="product">
+        <img
+          :src="product.imageUrl"
+          :alt="product.name"
+          class="product-image"
+        />
+        <h1>Карточка товара: {{ product.name }}</h1>
+        <p>Описание товара: {{ product.description }}</p>
+        <p>Цена: {{ product.price }} ₽</p>
+        <p>Тип: {{ product.type }}</p>
+        <p>Размер: {{ product.size }}</p>
+        <p>Вес: {{ product.weight }} г</p>
+        <p>Подкатегория ID: {{ product.subcategory_id }}</p>
+      </template>
+      <p v-else>Загрузка данных...</p>
     </div>
     <Footer />
   </div>
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
+import Header from "~/components/Header.vue";
+import Footer from "~/components/Footer.vue";
 
 const route = useRoute();
+const product = ref(null); // Реактивная переменная для данных товара
 
-// Пример данных
-const products = [
-  {
-    id: 1,
-    name: "Кофе эспрессо",
-    description: "Насыщенный вкус и аромат.",
-    price: 250,
-  },
-  {
-    id: 2,
-    name: "Латте",
-    description: "Смесь молока и кофе для мягкого вкуса.",
-    price: 300,
-  },
-];
+onMounted(() => {
+  const productId = route.params.id; // Получаем ID товара из параметров маршрута
 
-// Поиск товара по ID
-const product = computed(() => {
-  return products.find((p) => p.id === Number(route.params.id)) || {};
+  // Запрос к API для получения данных о товаре
+  fetch(`http://localhost:3001/api/product/Product/get/${productId}`)
+    .then((response) => response.json())
+    .then((data) => {
+      product.value = data; // Сохраняем данные в реактивной переменной
+    })
+    .catch((error) => console.error("Ошибка загрузки данных:", error));
 });
-
-const productName = computed(() => product.value.name || "Не найден");
-const productDescription = computed(
-  () => product.value.description || "Описание отсутствует"
-);
-const productPrice = computed(() => product.value.price || 0);
 </script>
 
 <style scoped>
@@ -53,5 +53,12 @@ const productPrice = computed(() => product.value.price || 0);
   max-width: 600px;
   margin: 20px auto;
   text-align: center;
+}
+
+.product-image {
+  max-width: 100%;
+  height: auto;
+  margin-bottom: 20px;
+  border-radius: 8px;
 }
 </style>
