@@ -4,14 +4,16 @@
     <router-view />
 
     <!-- Кнопка для перехода в корзину -->
-    <button class="cart-button" @click="goToCart">Корзина</button>
+    <button v-if="showCartButton" class="cart-button" @click="goToCart">
+      Корзина
+    </button>
 
     <!-- Footer -->
   </div>
 </template>
 
 <script setup>
-import { onMounted } from "vue";
+import { onMounted, computed } from "vue";
 import { useRouter } from "vue-router"; // Импорт Vue Router
 import Footer from "./components/Footer.vue"; // Импорт Footer компонента
 
@@ -22,12 +24,24 @@ const goToCart = () => {
   router.push("/cart"); // Перенаправляем на страницу корзины
 };
 
-// Перенаправление на главную страницу, если текущий путь не "/"
-onMounted(() => {
-  if (router.currentRoute.value.path !== "/") {
-    router.push("/"); // Перенаправляем на главную
-  }
+// Проверка авторизации пользователя
+const isAuthenticated = computed(() => {
+  const cookieValue = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith("token="));
+  return !!cookieValue; // Возвращает true, если авторизация успешна, иначе false
 });
+
+// Условие для отображения кнопки корзины
+const showCartButton = computed(() => {
+  const hiddenPaths = ["/auth", "/cart"];
+  return (
+    isAuthenticated.value &&
+    !hiddenPaths.includes(router.currentRoute.value.path)
+  );
+});
+
+onMounted(() => {});
 </script>
 
 <style scoped>

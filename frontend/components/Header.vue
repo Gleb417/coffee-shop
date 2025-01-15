@@ -12,7 +12,12 @@
     </div>
 
     <!-- Бургер-меню для мобильных -->
-    <div class="burger-menu" v-if="isMobile" @click="toggleMenu">
+    <div
+      class="burger-menu"
+      :class="{ 'menu-active': isMenuOpen }"
+      v-if="isMobile"
+      @click="toggleMenu"
+    >
       <span></span>
       <span></span>
       <span></span>
@@ -20,15 +25,35 @@
 
     <!-- Навигационное меню -->
     <nav :class="{ 'menu-open': isMenuOpen || !isMobile }">
-      <router-link to="/" class="nav-item">Главная</router-link>
-      <router-link to="/menu" class="nav-item">Меню</router-link>
-      <router-link to="/about" class="nav-item">О нас</router-link>
-      <router-link to="/contact" class="nav-item">Контакты</router-link>
-      <router-link to="/calculator" class="nav-item">Калькулятор</router-link>
-      <router-link to="/auth" class="nav-item"
+      <router-link to="/" class="nav-item" @click="handleNavItemClick"
+        >Главная</router-link
+      >
+      <router-link to="/menu" class="nav-item" @click="handleNavItemClick"
+        >Меню</router-link
+      >
+      <router-link to="/about" class="nav-item" @click="handleNavItemClick"
+        >О нас</router-link
+      >
+      <router-link to="/contact" class="nav-item" @click="handleNavItemClick"
+        >Контакты</router-link
+      >
+      <router-link to="/calculator" class="nav-item" @click="handleNavItemClick"
+        >Калькулятор</router-link
+      >
+      <router-link
+        v-if="isAuthenticated"
+        to="/profile"
+        class="nav-item"
+        @click="handleNavItemClick"
+        >Профиль</router-link
+      >
+      <router-link
+        v-else
+        to="/auth"
+        class="nav-item"
+        @click="handleNavItemClick"
         >Авторизация / Регистрация</router-link
       >
-      <router-link to="/profile" class="nav-item">Профиль</router-link>
     </nav>
   </header>
 </template>
@@ -39,9 +64,22 @@ import { ref, onMounted, onBeforeUnmount } from "vue";
 // Управление состоянием меню
 const isMenuOpen = ref(false);
 const isMobile = ref(false);
-
+const isAuthenticated = ref(false); // Состояние регистрации пользователя
+// Функция проверки наличия куки
+const checkCookieAuth = () => {
+  const cookies = document.cookie.split("; ");
+  const cookieValue = cookies.find((row) => row.startsWith("token="));
+  isAuthenticated.value = !!cookieValue; // Устанавливаем isAuthenticated в true, если кука найдена
+};
 const toggleMenu = () => {
   isMenuOpen.value = !isMenuOpen.value;
+};
+
+// Закрытие меню при клике на элемент
+const handleNavItemClick = () => {
+  if (isMobile.value) {
+    isMenuOpen.value = false;
+  }
 };
 
 // Проверка ширины экрана
@@ -50,6 +88,7 @@ const checkIfMobile = () => {
 };
 
 onMounted(() => {
+  checkCookieAuth();
   checkIfMobile();
   window.addEventListener("resize", checkIfMobile);
 });
@@ -131,6 +170,11 @@ nav:not(.menu-open) {
   width: 30px;
   height: 25px;
   cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.burger-menu.menu-active {
+  transform: rotate(90deg);
 }
 
 .burger-menu span {
@@ -138,6 +182,20 @@ nav:not(.menu-open) {
   height: 4px;
   background-color: #333;
   border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+/* Анимация бургер-меню */
+.burger-menu.menu-active span:nth-child(1) {
+  transform: rotate(45deg) translateY(8px);
+}
+
+.burger-menu.menu-active span:nth-child(2) {
+  opacity: 0;
+}
+
+.burger-menu.menu-active span:nth-child(3) {
+  transform: rotate(-45deg) translateY(-8px);
 }
 
 /* Мобильная версия */

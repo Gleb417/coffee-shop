@@ -3,7 +3,7 @@
 import express from 'express'
 import {
 	getAllOrders,
-	getOrderById,
+	getOrdersByUserId,
 	createOrder,
 	updateOrder,
 	deleteOrder,
@@ -19,8 +19,9 @@ const orderRouter = express.Router()
 // Получить все заказы
 orderRouter.get('/order/get', getAllOrders)
 
-// Получить заказ по ID
-orderRouter.get('/order/get/:id', getOrderById)
+// Получить заказы по user_id
+orderRouter.get('/order/user/:userId', getOrdersByUserId);
+
 
 // Создать новый заказ
 orderRouter.post('/order/create', createOrder)

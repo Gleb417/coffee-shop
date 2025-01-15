@@ -15,21 +15,26 @@ export const getAllOrders = async (req, res) => {
 }
 
 // Получить заказ по ID
-export const getOrderById = async (req, res) => {
+export const getOrdersByUserId = async (req, res) => {
 	try {
-		const order = await Order.findByPk(req.params.id, {
-			include: [{ model: OrderItem, as: 'items' }],
-		})
+		const userId = req.params.userId;
 
-		if (!order) {
-			return res.status(404).json({ message: 'Order not found' })
+		// Получение всех заказов по user_id
+		const orders = await Order.findAll({
+			where: { user_id: userId },
+			include: [{ model: OrderItem, as: 'items' }],
+		});
+
+		if (!orders || orders.length === 0) {
+			return res.status(404).json({ message: 'Orders not found' });
 		}
 
-		res.status(200).json(order)
+		res.status(200).json(orders);
 	} catch (error) {
-		res.status(500).json({ message: 'Error fetching order', error })
+		res.status(500).json({ message: 'Error fetching orders', error });
 	}
-}
+};
+
 
 // Создать новый заказ
 export const createOrder = async (req, res) => {

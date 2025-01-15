@@ -1,17 +1,21 @@
 <template>
   <div class="profile-page">
-    <!-- Подключаем Header -->
     <Header />
 
     <div class="profile-content">
       <h1>Профиль</h1>
 
-      <div class="profile-info">
+      <button @click="logout" class="logout-button">Выйти</button>
+
+      <div v-if="user" class="profile-info">
         <h2>Личная информация</h2>
-        <p><strong>Имя:</strong> Иван</p>
-        <p><strong>Фамилия:</strong> Иванов</p>
-        <p><strong>Email:</strong> ivanov@example.com</p>
-        <p><strong>Телефон:</strong> +7 999 123 45 67</p>
+        <p><strong>Имя:</strong> {{ user.username }}</p>
+        <p><strong>Email:</strong> {{ user.email }}</p>
+        <p><strong>Телефон:</strong> {{ user.phone }}</p>
+      </div>
+
+      <div v-else>
+        <p>Загрузка данных...</p>
       </div>
 
       <div class="order-history">
@@ -33,34 +37,57 @@
       </div>
     </div>
 
-    <!-- Подключаем Footer -->
     <Footer />
   </div>
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import Header from "~/components/Header.vue";
 import Footer from "~/components/Footer.vue";
 
-// Пример данных истории заказов
-const orders = ref([
-  {
-    id: 1,
-    date: "10.01.2025",
-    total: 1200,
-    items: [
-      { name: "Муссовый торт", price: 600, quantity: 1 },
-      { name: "Кофе эспрессо", price: 250, quantity: 2 },
-    ],
-  },
-  {
-    id: 2,
-    date: "05.01.2025",
-    total: 550,
-    items: [{ name: "Тирамису", price: 550, quantity: 1 }],
-  },
-]);
+// Функция для получения значения cookie по имени
+function getCookie(name) {
+  const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
+  return match ? decodeURIComponent(match[2]) : null;
+}
+
+// Функция для удаления cookie
+function deleteCookie(name) {
+  document.cookie = `${name}=; Max-Age=-1; path=/;`;
+}
+
+const user = ref(null);
+const orders = ref([]);
+const router = useRouter();
+
+onMounted(() => {
+  const userToken = getCookie("token");
+
+  if (userToken) {
+    const decodedToken = JSON.parse(atob(userToken.split(".")[1]));
+    const userId = decodedToken.id;
+
+    // Запрос к API за данными пользователя
+    fetch(`http://localhost:3001/api/user/users/${userId}`)
+      .then((response) => response.json())
+      .then((data) => (user.value = data))
+      .catch((error) => console.error(error));
+
+    // Запрос к API за историей заказов
+    fetch(`http://localhost:3001/api/orders/order/user/${userId}`)
+      .then((response) => response.json())
+      .then((data) => (orders.value = data))
+      .catch((error) => console.error(error));
+  }
+});
+
+// Функция для выхода из профиля
+function logout() {
+  deleteCookie("token");
+  router.push("/"); // Перенаправляем пользователя на страницу входа
+}
 </script>
 
 <style scoped>
@@ -76,6 +103,21 @@ const orders = ref([
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.logout-button {
+  background-color: #ff4d4f;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  margin-bottom: 20px;
+}
+
+.logout-button:hover {
+  background-color: #e04344;
 }
 
 h1 {
