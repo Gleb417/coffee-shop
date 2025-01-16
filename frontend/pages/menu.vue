@@ -31,7 +31,7 @@
 
       <!-- Кнопка для Десертов -->
       <router-link
-        to="Snaks"
+        to="Snacks"
         class="menu-item desserts"
         data-aos="zoom-in"
         data-aos-duration="1000"
