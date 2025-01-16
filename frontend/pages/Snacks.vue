@@ -46,7 +46,7 @@ onMounted(() => {
 
 // Фильтруем только десерты
 const desserts = computed(() =>
-  products.value.filter((product) => product.type === "cake")
+  products.value.filter((product) => product.type === "dessert")
 );
 </script>
 

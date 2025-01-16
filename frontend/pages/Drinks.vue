@@ -11,7 +11,7 @@
       <router-link
         v-for="product in drinks"
         :key="product.id"
-        :to="{ name: 'ProductDetail', params: { id: product.id } }"
+        :to="{ name: 'ProductDetail', query: { id: product.id } }"
         class="product-card"
       >
         <img

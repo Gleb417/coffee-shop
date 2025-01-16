@@ -4,7 +4,7 @@
     <div class="product-detail-content">
       <template v-if="product">
         <img
-          :src="product.imageUrl"
+          :src="`http://localhost:3001${product.imageUrl}`"
           :alt="product.name"
           class="product-image"
         />
@@ -32,7 +32,7 @@ const route = useRoute();
 const product = ref(null); // Реактивная переменная для данных товара
 
 onMounted(() => {
-  const productId = route.params.id; // Получаем ID товара из параметров маршрута
+  const productId = route.query.id; // Получаем ID товара из параметров маршрута
 
   // Запрос к API для получения данных о товаре
   fetch(`http://localhost:3001/api/product/Product/get/${productId}`)

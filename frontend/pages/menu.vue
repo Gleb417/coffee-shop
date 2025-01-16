@@ -18,7 +18,7 @@
 
       <!-- Кнопка для Закусок -->
       <router-link
-        to="Snacks"
+        to="Desserts"
         class="menu-item snacks"
         data-aos="zoom-in"
         data-aos-duration="1000"
@@ -31,7 +31,7 @@
 
       <!-- Кнопка для Десертов -->
       <router-link
-        to="Desserts"
+        to="Snaks"
         class="menu-item desserts"
         data-aos="zoom-in"
         data-aos-duration="1000"

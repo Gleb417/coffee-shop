@@ -3,14 +3,19 @@
     <!-- Подключаем Header -->
     <Header />
 
-    <h1>Десерты</h1>
+    <h1>Торты</h1>
     <p>Наслаждайтесь нашими сладкими угощениями.</p>
 
     <div class="products">
       <!-- Отображаем карточки десертов -->
-      <div v-for="product in desserts" :key="product.id" class="product-card">
+      <router-link
+        v-for="product in desserts"
+        :key="product.id"
+        :to="{ name: 'ProductDetail', query: { id: product.id } }"
+        class="product-card"
+      >
         <img
-          :src="product.imageUrl"
+          :src="`http://localhost:3001${product.imageUrl}`"
           :alt="product.name"
           class="product-image"
         />
@@ -19,7 +24,7 @@
           <p class="product-description">{{ product.description }}</p>
           <p class="product-price">{{ product.price }} ₽</p>
         </div>
-      </div>
+      </router-link>
     </div>
 
     <!-- Подключаем Footer -->
@@ -46,7 +51,7 @@ onMounted(() => {
 
 // Фильтруем только десерты
 const desserts = computed(() =>
-  products.value.filter((product) => product.type === "dessert")
+  products.value.filter((product) => product.type === "cake")
 );
 </script>
 
