@@ -1,118 +1,126 @@
 <template>
   <div class="cart-page">
-    <!-- Подключаем Header -->
     <Header />
 
-    <h1>Активные заказы</h1>
+    <h1>Корзина</h1>
 
-    <div v-if="orders.length" class="orders">
-      <div v-for="order in orders" :key="order.id" class="order-card">
-        <h2>Заказ №{{ order.id }} — {{ order.date }}</h2>
+    <!-- Плашка с уведомлением о том, что заказ был добавлен через калькулятор -->
+    <div v-if="addedFromCalculator" class="calculator-notification">
+      <p>Этот заказ был добавлен через калькулятор напитков.</p>
+    </div>
+
+    <!-- Отдельный блок для заказов из калькулятора -->
+    <div v-if="calculatorCart.length" class="calculator-order-card">
+      <h2>Ваш заказ из калькулятора</h2>
+      <div class="order-items">
+        <div v-for="(item, index) in calculatorCart" :key="index" class="item-card">
+          <img :src="item.imageUrl" :alt="item.name" class="item-image" />
+          <div class="item-info">
+            <h3>{{ item.name }}</h3>
+            <p>{{ item.description }}</p>
+            <p>Цена: {{ item.price }} ₽</p>
+            <p>Количество: {{ item.quantity }}</p>
+            <button @click="removeFromCalculatorCart(index)" class="cancel-btn">
+              Удалить
+            </button>
+          </div>
+        </div>
+      </div>
+      <p class="order-total">Общая сумма: <strong>{{ totalCalculatorPrice }} ₽</strong></p>
+      <button @click="checkoutFromCalculator" class="checkout-btn">Оформить заказ из калькулятора</button>
+    </div>
+
+    <!-- Обычные товары из корзины -->
+    <div v-if="cart.length" class="orders">
+      <div class="order-card">
+        <h2>Ваш заказ</h2>
         <p class="order-total">
-          Сумма заказа: <strong>{{ order.total }} ₽</strong>
+          Общая сумма: <strong>{{ totalPrice }} ₽</strong>
         </p>
         <div class="order-items">
-          <div
-            v-for="(item, index) in order.items"
-            :key="index"
-            class="item-card"
-          >
-            <img :src="item.image" :alt="item.name" class="item-image" />
+          <div v-for="(item, index) in cart" :key="index" class="item-card">
+            <img :src="item.imageUrl" :alt="item.name" class="item-image" />
             <div class="item-info">
               <h3>{{ item.name }}</h3>
               <p>{{ item.description }}</p>
               <p>Цена: {{ item.price }} ₽</p>
               <p>Количество: {{ item.quantity }}</p>
-              <button @click="cancelItem(order.id, index)" class="cancel-btn">
-                Отменить
+              <button @click="removeFromCart(index)" class="cancel-btn">
+                Удалить
               </button>
             </div>
           </div>
         </div>
+        <button @click="checkout" class="checkout-btn">Оформить заказ</button>
       </div>
     </div>
 
     <div v-else>
-      <p>Ваша история заказов пуста.</p>
+      <p>Ваша корзина пуста.</p>
     </div>
 
-    <!-- Подключаем Footer -->
     <Footer />
   </div>
 </template>
 
 <script setup>
-import Header from "~/components/Header.vue"; // Импорт Header компонента
-import Footer from "~/components/Footer.vue"; // Импорт Footer компонента
+import Header from "~/components/Header.vue";
+import Footer from "~/components/Footer.vue";
+import { ref, computed, onMounted } from "vue";
 
-import { reactive } from "vue";
+const cart = ref([]);  // Основная корзина
+const calculatorCart = ref([]);  // Корзина из калькулятора
+const addedFromCalculator = ref(false);  // Флаг, если заказ из калькулятора
 
-// Пример заказов (реактивный, чтобы изменения сразу отображались)
-const orders = reactive([
-  {
-    id: 1,
-    date: "2025-01-10",
-    total: 1150,
-    items: [
-      {
-        name: "Муссовый торт",
-        image: "assets/images/dessert1.jpg",
-        description: "Нежный мусс с фруктовым вкусом и хрустящей основой.",
-        price: 600,
-        quantity: 1,
-      },
-      {
-        name: "Кофе эспрессо",
-        image: "assets/images/coffee1.jpg",
-        description:
-          "Насыщенный вкус и аромат, идеально подходящий для бодрости.",
-        price: 250,
-        quantity: 2,
-      },
-    ],
-  },
-  {
-    id: 2,
-    date: "2025-01-12",
-    total: 800,
-    items: [
-      {
-        name: "Латте",
-        image: "assets/images/coffee2.jpg",
-        description:
-          "Смесь молока и кофе для мягкого вкуса и утреннего настроения.",
-        price: 300,
-        quantity: 2,
-      },
-    ],
-  },
-]);
+onMounted(() => {
+  const storedCart = JSON.parse(localStorage.getItem("cart")) || [];
+  cart.value = storedCart;
+  
+  const storedCalculatorCart = JSON.parse(localStorage.getItem("calculatorCart")) || [];
+  calculatorCart.value = storedCalculatorCart;
 
-// Метод для отмены товара
-const cancelItem = (orderId, itemIndex) => {
-  const order = orders.find((o) => o.id === orderId);
-  if (!order) return;
-
-  // Удаляем один товар из заказа
-  const item = order.items[itemIndex];
-  item.quantity--;
-
-  // Если количество товара стало 0, удаляем его полностью
-  if (item.quantity === 0) {
-    order.items.splice(itemIndex, 1);
+  // Проверка флага, если заказ был добавлен из калькулятора
+  const isAddedFromCalculator = localStorage.getItem("addedFromCalculator");
+  if (isAddedFromCalculator) {
+    addedFromCalculator.value = true;
+    localStorage.removeItem("addedFromCalculator");
   }
+});
 
-  // Если заказ пуст после удаления, удаляем весь заказ
-  if (order.items.length === 0) {
-    const orderIndex = orders.indexOf(order);
-    orders.splice(orderIndex, 1);
-  }
+// Удаление товара из обычной корзины
+const removeFromCart = (index) => {
+  cart.value.splice(index, 1);
+  localStorage.setItem("cart", JSON.stringify(cart.value));
+};
 
-  // Обновляем общую сумму заказа
-  order.total = order.items.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
+// Удаление товара из корзины калькулятора
+const removeFromCalculatorCart = (index) => {
+  calculatorCart.value.splice(index, 1);
+  localStorage.setItem("calculatorCart", JSON.stringify(calculatorCart.value));
+};
+
+// Подсчет общей суммы обычной корзины
+const totalPrice = computed(() =>
+  cart.value.reduce((sum, item) => sum + item.price * item.quantity, 0)
+);
+
+// Подсчет общей суммы корзины из калькулятора
+const totalCalculatorPrice = computed(() =>
+  calculatorCart.value.reduce((sum, item) => sum + item.price * item.quantity, 0)
+);
+
+// Оформление заказа из обычной корзины
+const checkout = () => {
+  alert("Заказ оформлен!");
+  localStorage.removeItem("cart");
+  cart.value = [];
+};
+
+// Оформление заказа из корзины калькулятора
+const checkoutFromCalculator = () => {
+  alert("Заказ из калькулятора оформлен!");
+  localStorage.removeItem("calculatorCart");
+  calculatorCart.value = [];
 };
 </script>
 
@@ -134,20 +142,20 @@ p {
   margin-bottom: 20px;
 }
 
-.orders {
+.orders, .calculator-order-card {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-.order-card {
+.order-card, .calculator-order-card {
   background-color: #fff;
   border-radius: 10px;
   padding: 15px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.order-card h2 {
+.order-card h2, .calculator-order-card h2 {
   font-size: 1.4rem;
   color: #3e2b1d;
 }
@@ -198,10 +206,6 @@ p {
   margin: 5px 0;
 }
 
-.item-info p:last-child {
-  font-weight: bold;
-}
-
 .cancel-btn {
   background-color: #e74c3c;
   color: white;
@@ -214,5 +218,30 @@ p {
 
 .cancel-btn:hover {
   background-color: #c0392b;
+}
+
+.checkout-btn {
+  background-color: #ff7f50;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  font-size: 1rem;
+  cursor: pointer;
+  border-radius: 5px;
+  margin-top: 15px;
+}
+
+.checkout-btn:hover {
+  background-color: #ff5722;
+}
+
+/* Стиль для плашки с уведомлением */
+.calculator-notification {
+  background-color: #ffeb3b;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  font-size: 1rem;
+  color: #3e2b1d;
 }
 </style>

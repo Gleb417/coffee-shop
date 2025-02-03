@@ -2,10 +2,9 @@
   <div class="calculator-page">
     <Header />
 
-    <!-- Основной контейнер калькулятора -->
     <section class="calculator-container" data-aos="fade-up">
       <div class="container">
-        <h1>Соберите свой заказ</h1>
+        <h1>Соберите свой напиток</h1>
 
         <!-- Шаг 1: Выбор стакана -->
         <div class="step">
@@ -165,23 +164,6 @@
       </div>
     </section>
 
-    <!-- Анимация заказа (пакет или стол) -->
-    <div v-if="orderConfirmed" class="order-animation">
-      <div class="order-content">
-        <img v-if="isToGo" src="assets/images/package.png" alt="Пакет" />
-        <div v-else class="order-table">Ваш заказ на столе</div>
-        <div class="order-details">
-          <h3>Ваш заказ:</h3>
-          <p>Стакан: {{ selectedGlassName }}</p>
-          <p>Напиток: {{ selectedDrinkName }}</p>
-          <p v-if="selectedCoffee">Тип кофе: {{ selectedCoffeeName }}</p>
-          <p v-if="selectedJuice">Вид сока: {{ selectedJuiceName }}</p>
-          <p v-if="selectedTea">Вид чая: {{ selectedTeaName }}</p>
-          <p>Добавки: {{ selectedAddOnsNames.join(", ") }}</p>
-        </div>
-      </div>
-    </div>
-
     <Footer />
   </div>
 </template>
@@ -300,6 +282,33 @@ const toggleAddOn = (id) => {
 // Подтверждение заказа
 const confirmOrder = () => {
   orderConfirmed.value = true;
+  saveOrderToCart();
+  // Перенаправление в корзину
+  setTimeout(() => {
+    window.location.href = "/cart"; // Перенаправляем на страницу корзины
+  }, 500);
+};
+
+// Сохранение заказа в корзину
+const saveOrderToCart = () => {
+  const order = {
+    glass: selectedGlass.value,
+    drink: selectedDrink.value,
+    coffee: selectedCoffee.value,
+    juice: selectedJuice.value,
+    tea: selectedTea.value,
+    option: isToGo.value,
+    addOns: selectedAddOns.value,
+  };
+
+  let cart = JSON.parse(localStorage.getItem("cart")) || [];
+  cart.push(order);
+  localStorage.setItem("cart", JSON.stringify(cart));
+};
+
+// Метод для возврата на главную
+const goHome = () => {
+  window.location.href = "/"; // Переход на главную страницу
 };
 
 // Выбранные варианты (стакан, напиток, добавки)
@@ -345,175 +354,142 @@ onMounted(() => {
 });
 </script>
 
+
+
 <style scoped>
 @import url("https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Lora:wght@400;700&display=swap");
 
 .calculator-page {
+  background-color: #fff;
   font-family: "Lora", serif;
-  background-color: #f8f5eb;
-  padding-bottom: 40px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 h1 {
   text-align: center;
-  font-family: "Dancing Script", cursive;
-  font-size: 3rem;
+  font-size: 36px;
+  margin-top: 50px;
 }
 
 .step {
-  padding: 40px 0;
-  text-align: center;
+  margin-bottom: 30px;
+}
+
+.step h2 {
+  font-size: 24px;
+  margin-bottom: 20px;
 }
 
 .glass-options,
 .drink-options,
-.add-ons {
+.drink-varieties {
   display: flex;
-  justify-content: center;
   gap: 20px;
-  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .glass-option,
 .drink-option,
+.drink-variety-option,
 .addon-option {
+  text-align: center;
   cursor: pointer;
-  transition: transform 0.3s ease;
-}
-
-.glass-option img,
-.drink-option img {
-  width: 150px;
-  height: 150px;
-  object-fit: cover;
-  border-radius: 10px;
-}
-
-.glass-option p,
-.drink-option p,
-.addon-option p {
-  margin-top: 10px;
-  font-size: 1.1rem;
+  transition: transform 0.2s;
 }
 
 .glass-option.active,
 .drink-option.active,
+.drink-variety-option.active,
 .addon-option.active {
   transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.glass-option img,
+.drink-option img,
+.drink-variety-option img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+}
+
+.return-home {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.return-home button {
+  font-size: 16px;
+  padding: 10px 20px;
+  background-color: #f39c12;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.return-home button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.confirm-button {
+  display: block;
+  width: 100%;
+  padding: 15px;
+  background-color: #e74c3c;
+  color: white;
+  font-size: 18px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.confirm-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.order-content {
+  text-align: center;
+  margin: 20px;
+}
+
+.order-details p {
+  margin: 10px 0;
+}
+
+.options {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
 }
 
 .options button {
   padding: 10px 20px;
-  font-size: 1.2rem;
-  margin: 0 10px;
-  background-color: #cca763;
+  background-color: #2980b9;
   color: white;
+  font-size: 18px;
   border: none;
   cursor: pointer;
-  border-radius: 5px;
 }
 
-.options button.active {
-  background-color: #ad8c62;
-}
-
-.confirm-button {
-  padding: 15px 30px;
-  background-color: #cca763;
-  color: white;
-  font-size: 1.5rem;
-  border: none;
-  cursor: pointer;
-  border-radius: 5px;
-  transition: background-color 0.3s;
-}
-
-.confirm-button:hover {
-  background-color: #ad8c62;
-}
-/* Добавляем стиль для заблокированных элементов */
-.glass-option.disabled,
-.drink-option.disabled,
-.addon-option.disabled,
-.options button:disabled,
-.confirm-button:disabled {
-  opacity: 0.5; /* Снижаем яркость */
-  cursor: not-allowed; /* Убираем курсор */
-}
-.confirm-button:disabled {
-  opacity: 0.5;
+.options button:disabled {
+  background-color: #ccc;
   cursor: not-allowed;
 }
 
-/* Анимация для заказа */
-.order-animation {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: rgba(0, 0, 0, 0.7);
-  padding: 40px;
-  border-radius: 10px;
-  text-align: center;
-  color: white;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-}
-
-.order-content img {
-  width: 150px;
-  height: 150px;
-  margin-bottom: 20px;
-}
-
-.order-table {
-  font-size: 1.5rem;
-  color: #cca763;
-}
-
-.order-details {
-  margin-top: 20px;
-}
-
-.order-details h3 {
-  font-size: 1.5rem;
-  font-weight: bold;
-}
-
-.order-details p {
-  font-size: 1.2rem;
-}
-/* Центрирование всех вариантов напитков */
-.drink-varieties {
+.add-ons {
   display: flex;
-  justify-content: center; /* Выравнивание по горизонтали */
-  align-items: center; /* Выравнивание по вертикали */
-  flex-wrap: wrap;
-  gap: 20px; /* Расстояние между элементами */
+  gap: 20px;
+  justify-content: center;
 }
 
-/* Обычные стили для вариантов напитков */
-.drink-variety-option {
-  cursor: pointer;
-  opacity: 1;
-  transition: transform 0.3s ease;
-}
-
-.drink-variety-option.active {
-  border: 2px solid #007bff;
-  background-color: #e7f1ff;
-  transform: scale(1.05); /* Легкое увеличение при выборе */
-}
-
-.drink-variety-option.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* Заголовки шагов */
-.step h2 {
-  font-size: 1.5rem;
-  margin-bottom: 20px;
-  text-align: center;
+footer {
+  margin-top: 40px;
 }
 </style>
