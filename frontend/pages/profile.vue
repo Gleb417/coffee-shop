@@ -7,6 +7,11 @@
 
       <button @click="logout" class="logout-button">Выйти</button>
 
+      <!-- Кнопка для админа -->
+      <div v-if="user && user.role === 'admin'" class="admin-panel">
+        <button @click="goToAdmin" class="admin-button">Панель администрирования</button>
+      </div>
+
       <div v-if="user" class="profile-info">
         <h2>Личная информация</h2>
         <p><strong>Имя:</strong> {{ user.username }}</p>
@@ -22,8 +27,7 @@
         <h2>История заказов</h2>
         <ul>
           <li v-for="order in orders" :key="order.id" class="order">
-            <h3>Заказ №{{ order.id }} - {{ order.date }}</h3>
-            <p><strong>Общая сумма:</strong> {{ order.total }} ₽</p>
+            <h3>Заказ №{{ order.id }} - {{ order.created_at }}</h3>
             <div class="order-items">
               <h4>Товары:</h4>
               <ul>
@@ -88,6 +92,11 @@ function logout() {
   deleteCookie("token");
   router.push("/"); // Перенаправляем пользователя на страницу входа
 }
+
+// Функция для перехода на страницу админки
+function goToAdmin() {
+  router.push("/admin"); // Убедитесь, что роутер настроен на данный путь
+}
 </script>
 
 <style scoped>
@@ -118,6 +127,24 @@ function logout() {
 
 .logout-button:hover {
   background-color: #e04344;
+}
+
+.admin-panel {
+  margin-bottom: 20px;
+}
+
+.admin-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.admin-button:hover {
+  background-color: #0056b3;
 }
 
 h1 {

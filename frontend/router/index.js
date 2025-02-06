@@ -41,6 +41,10 @@ const routes = [
     path: "/cart",
     component: () => import(".../pages/cart.vue"),
   },
+  {
+    path: "/admin",
+    component: () => import(".../pages/admin.vue"),
+  },
 ];
 
 const router = createRouter({
