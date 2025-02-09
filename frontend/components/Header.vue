@@ -75,6 +75,8 @@ const toggleMenu = () => {
   isMenuOpen.value = !isMenuOpen.value;
 };
 
+
+
 // Закрытие меню при клике на элемент
 const handleNavItemClick = () => {
   if (isMobile.value) {

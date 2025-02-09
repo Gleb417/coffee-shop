@@ -47,7 +47,7 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import axios from "axios";
 
 const isLogin = ref(true);
@@ -57,6 +57,15 @@ const phone = ref("");
 const password = ref("");
 const successMessage = ref(""); // Состояние для успешного сообщения
 const errorMessage = ref(""); // Состояние для ошибок
+
+// Проверка токена при монтировании компонента
+onMounted(() => {
+  const token = getCookie("token");
+  if (token) {
+    // Если токен существует, считаем пользователя авторизованным
+    isLogin.value = false; // Показываем, что пользователь уже авторизован
+  }
+});
 
 const submitForm = async () => {
   try {
@@ -71,7 +80,7 @@ const submitForm = async () => {
       );
       // Успешная авторизация
       console.log("Авторизация успешна:", response.data);
-      document.cookie = `token=${response.data.token}; path=/`; // Записываем токен в куки
+      setCookie("token", response.data.token, 7); // Записываем токен в куки (на 7 дней)
 
       // Перенаправление на главную страницу
       window.location.href = "/";
@@ -111,7 +120,34 @@ const toggleForm = () => {
   successMessage.value = ""; // Очистить сообщение при переключении формы
   errorMessage.value = ""; // Очистить сообщение об ошибке при переключении формы
 };
+
+// Функция для записи куки
+const setCookie = (name, value, days) => {
+  const d = new Date();
+  d.setTime(d.getTime() + days * 24 * 60 * 60 * 1000);
+  const expires = "expires=" + d.toUTCString();
+  document.cookie = name + "=" + value + ";" + expires + ";path=/";
+};
+
+// Функция для получения куки
+const getCookie = (name) => {
+  const decodedCookie = decodeURIComponent(document.cookie);
+  const cookies = decodedCookie.split(";");
+  for (let i = 0; i < cookies.length; i++) {
+    let cookie = cookies[i].trim();
+    if (cookie.indexOf(name + "=") === 0) {
+      return cookie.substring(name.length + 1, cookie.length);
+    }
+  }
+  return "";
+};
+
+// Функция для удаления куки
+const deleteCookie = (name) => {
+  setCookie(name, "", -1);
+};
 </script>
+
 
 <style scoped>
 .auth-container {

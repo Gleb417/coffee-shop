@@ -3,7 +3,7 @@
     <Header />
     <div class="admin-content">
       <h1>Панель администратора</h1>
-      
+
       <div class="accordion">
         <!-- Секция "Создание нового товара" -->
         <div class="accordion-item">
@@ -26,23 +26,25 @@
               </div>
               <div class="form-group">
                 <label for="type">Тип:</label>
-                <input type="text" id="type" v-model="newProduct.type" required />
-              </div>
-              <div class="form-group">
-                <label for="size">Размер:</label>
-                <input type="text" id="size" v-model="newProduct.size" required />
+                <select id="type" v-model="newProduct.type" required @change="updateSubcategories">
+                  <option value="торт">Торт</option>
+                  <option value="десерт">Десерт</option>
+                  <option value="напиток">Напиток</option>
+                </select>
               </div>
               <div class="form-group">
                 <label for="weight">Вес (г):</label>
                 <input type="number" id="weight" v-model.number="newProduct.weight" required />
               </div>
               <div class="form-group">
-                <label for="subcategory_id">Подкатегория ID:</label>
-                <input type="number" id="subcategory_id" v-model.number="newProduct.subcategory_id" required />
+                <label for="subcategory_id">Подкатегория:</label>
+                <select id="subcategory_id" v-model="newProduct.subcategory_id" required>
+                  <option v-for="sub in subcategories" :key="sub.id" :value="sub.id">{{ sub.name }}</option>
+                </select>
               </div>
               <div class="form-group">
-                <label for="imageUrl">URL изображения:</label>
-                <input type="text" id="imageUrl" v-model="newProduct.imageUrl" />
+                <label for="image">URL изображения:</label>
+                <input type="text" id="image" v-model="newProduct.image" />
               </div>
               <button type="submit">Создать товар</button>
             </form>
@@ -57,9 +59,7 @@
           <div class="accordion-body" v-show="activeAccordion === 'viewProducts'">
             <ul class="product-list">
               <li v-for="product in products" :key="product.id" class="product-item">
-                <p>
-                  <strong>{{ product.name }}</strong> – {{ product.price }} ₽
-                </p>
+                <p><strong>{{ product.name }}</strong> – {{ product.price }} ₽</p>
                 <div class="action-buttons">
                   <button @click="deleteProduct(product.id)">Удалить товар</button>
                   <button @click="goToProduct(product.id)">Перейти к товару</button>
@@ -68,7 +68,7 @@
             </ul>
           </div>
         </div>
-        
+
         <!-- Секция "Просмотр заказов" -->
         <div class="accordion-item">
           <button class="accordion-header" @click="toggleSection('viewOrders')">
@@ -78,35 +78,29 @@
             <ul class="order-list">
               <li v-for="order in orders" :key="order.id" class="order-item">
                 <p>Заказ №{{ order.id }} – Дата: {{ order.created_at }}</p>
-                <div v-if="order.items && order.items.length">
-                  <table class="order-items-table">
-                    <thead>
-                      <tr>
-                        <th>Название товара</th>
-                        <th>Цена</th>
-                        <th>Количество</th>
-                        <th>Сумма</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <!-- Здесь предполагается, что каждый элемент заказа имеет поля productId и quantity -->
-                      <tr v-for="item in order.items" :key="item.productId">
-                        <td>{{ getProductName(item.productId) }}</td>
-                        <td>{{ getProductPrice(item.productId) }} ₽</td>
-                        <td>{{ item.quantity }}</td>
-                        <td>{{ (getProductPrice(item.productId) * item.quantity).toFixed(2) }} ₽</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-                <div v-else>
-                  <p>Нет товаров в заказе</p>
-                </div>
+                <table class="order-items-table">
+                  <thead>
+                    <tr>
+                      <th>Название товара</th>
+                      <th>Цена за штуку</th>
+                      <th>Количество</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="item in order.items" :key="item.product_id">
+                      <td>{{ getProductName(item.product_id) }}</td>
+                      <td>{{ getProductPrice(item.product_id) }} ₽</td>
+                      <td>{{ item.quantity }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <!-- Добавляем общую сумму заказа -->
+                <p><strong>Общая сумма заказа: {{ getTotalOrderPrice(order.items) }} ₽</strong></p>
               </li>
             </ul>
           </div>
         </div>
-        
+
       </div>
     </div>
     <Footer />
@@ -124,26 +118,39 @@ const router = useRouter();
 // Массивы для хранения списка товаров и заказов
 const products = ref([]);
 const orders = ref([]);
+const subcategories = ref([]);
 
-// Объект для нового товара (создание)
+// Объект для нового товара
 const newProduct = ref({
   name: "",
   description: "",
   price: 0,
-  type: "",
-  size: "",
+  type: "торт",
   weight: 0,
-  subcategory_id: 0,
-  imageUrl: ""
+  subcategory_id: null,
+  image: ""
 });
 
 // Переменная для хранения активной секции аккордеона
 const activeAccordion = ref("");
 
+// Карта категорий и их подкатегорий
+const categoryMap = {
+  торт: ["Шоколадный", "Фруктовый", "Сливочный"],
+  десерт: ["Эклер", "Макарун", "Пирожное"],
+  напиток: ["Чай", "Кофе", "Сок"]
+};
+
 // Функция для переключения секций аккордеона
-function toggleSection(section) {
+const toggleSection = (section) => {
   activeAccordion.value = activeAccordion.value === section ? "" : section;
-}
+};
+
+// Функция для обновления подкатегорий на основе выбранного типа
+const updateSubcategories = () => {
+  subcategories.value = categoryMap[newProduct.value.type] || [];
+  newProduct.value.subcategory_id = subcategories.value[0]?.id || "";
+};
 
 // Функция получения списка товаров с сервера
 const fetchProducts = async () => {
@@ -159,7 +166,7 @@ const fetchProducts = async () => {
   }
 };
 
-// Функция получения списка заказов с сервера
+// Функция получения всех заказов с сервера (для админа)
 const fetchOrders = async () => {
   try {
     const res = await fetch("http://localhost:3001/api/orders/order/get");
@@ -173,7 +180,21 @@ const fetchOrders = async () => {
   }
 };
 
-// Функция создания нового товара – отправляет POST-запрос на сервер
+// Функция получения подкатегорий с сервера
+const fetchSubcategories = async () => {
+  try {
+    const res = await fetch("http://localhost:3001/api/subcategory/Subcategory/get");
+    if (!res.ok) {
+      console.error("Ошибка получения подкатегорий");
+      return;
+    }
+    subcategories.value = await res.json();
+  } catch (error) {
+    console.error("Ошибка:", error);
+  }
+};
+
+// Функция создания нового товара
 const addProduct = async () => {
   try {
     const res = await fetch("http://localhost:3001/api/product/Product/create", {
@@ -193,18 +214,17 @@ const addProduct = async () => {
       name: "",
       description: "",
       price: 0,
-      type: "",
-      size: "",
+      type: "торт",
       weight: 0,
-      subcategory_id: 0,
-      imageUrl: ""
+      subcategory_id: null,
+      image: ""
     };
   } catch (error) {
     console.error("Ошибка:", error);
   }
 };
 
-// Функция удаления товара – отправляет DELETE-запрос на сервер
+// Функция удаления товара
 const deleteProduct = async (productId) => {
   try {
     const res = await fetch(`http://localhost:3001/api/product/Product/delete/${productId}`, {
@@ -223,44 +243,51 @@ const deleteProduct = async (productId) => {
 
 // Функция перехода на страницу товара
 const goToProduct = (productId) => {
-  router.push({ name: "ProductDetail", query: { id: productId } });
+  window.location.href = `http://localhost:3000/ProductDetail?id=${productId}`;
 };
 
-// Функция для получения названия товара по его id из массива products
-function getProductName(productId) {
-  const product = products.value.find(p => p.id === productId);
-  return product ? product.name : "Неизвестно";
-}
+// Функция для получения названия товара по его id
+const getProductName = (productId) => {
+  const product = products.value.find((p) => p.id === productId);
+  return product ? product.name : "Не найдено";
+};
 
-// Функция для получения цены товара по его id из массива products
-function getProductPrice(productId) {
-  const product = products.value.find(p => p.id === productId);
+// Функция для получения цены товара по его id
+const getProductPrice = (productId) => {
+  const product = products.value.find((p) => p.id === productId);
   return product ? product.price : 0;
-}
+};
 
+// Функция для расчета общей стоимости заказа
+const getTotalOrderPrice = (orderItems) => {
+  return orderItems.reduce((total, item) => {
+    const productPrice = getProductPrice(item.product_id); // Получаем цену товара
+    return total + (productPrice * item.quantity); // Умножаем на количество и добавляем к общей сумме
+  }, 0).toFixed(2); // Округляем до 2 знаков после запятой
+};
+
+// Монтируем компонент и загружаем данные
 onMounted(() => {
+  fetchSubcategories();
   fetchProducts();
   fetchOrders();
 });
 </script>
 
 <style scoped>
+/* Стили для страницы */
 .admin-panel {
   padding: 20px;
   background-color: #f4f4f4;
 }
 
 .admin-content {
-  max-width: 1000px;
+  max-width: 800px;
   margin: 0 auto;
   background-color: #fff;
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.accordion {
-  margin-top: 20px;
 }
 
 .accordion-item {
@@ -272,90 +299,49 @@ onMounted(() => {
   color: white;
   border: none;
   width: 100%;
-  text-align: left;
   padding: 10px;
   font-size: 1.1rem;
   cursor: pointer;
   border-radius: 4px;
 }
 
-.accordion-header:hover {
-  background-color: #0056b3;
-}
-
 .accordion-body {
   padding: 10px;
   border: 1px solid #007bff;
   border-top: none;
-  border-radius: 0 0 4px 4px;
 }
 
 .form-group {
   margin-bottom: 10px;
 }
 
-label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
-}
-
-input[type="text"],
-input[type="number"],
-textarea {
+input, select, textarea {
   width: 100%;
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
 }
 
-.product-list,
-.order-list {
-  list-style-type: none;
-  padding: 0;
-}
-
-.product-item,
-.order-item {
-  margin-bottom: 15px;
-  padding: 10px;
-  border: 1px solid #eee;
-  border-radius: 4px;
-}
-
-.action-buttons {
-  display: flex;
-  gap: 10px;
-  margin-top: 10px;
-}
-
 button {
   background-color: #007bff;
   color: white;
-  border: none;
-  padding: 10px 15px;
+  padding: 10px;
   border-radius: 5px;
   cursor: pointer;
 }
 
-button:hover {
-  background-color: #0056b3;
+.product-list, .order-list {
+  list-style: none;
+  padding: 0;
 }
 
-.order-items-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-}
-
-.order-items-table th,
-.order-items-table td {
+.product-item, .order-item {
   border: 1px solid #ddd;
-  padding: 8px;
-  text-align: left;
+  padding: 10px;
+  margin-bottom: 10px;
 }
 
-.order-items-table th {
-  background-color: #f2f2f2;
+.action-buttons button {
+  margin-right: 10px;
 }
 </style>

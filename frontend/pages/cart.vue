@@ -1,60 +1,30 @@
 <template>
-  <div class="cart-page">
+  <div>
     <Header />
 
-    <h1>Корзина</h1>
+    <!-- Корзина -->
+    <div v-if="cartItems.length > 0" class="cart-content">
+      <h1>Ваша корзина</h1>
 
-    <!-- Плашка с уведомлением о том, что заказ был добавлен через калькулятор -->
-    <div v-if="addedFromCalculator" class="calculator-notification">
-      <p>Этот заказ был добавлен через калькулятор напитков.</p>
-    </div>
-
-    <!-- Отдельный блок для заказов из калькулятора -->
-    <div v-if="calculatorCart.length" class="calculator-order-card">
-      <h2>Ваш заказ из калькулятора</h2>
-      <div class="order-items">
-        <div v-for="(item, index) in calculatorCart" :key="index" class="item-card">
-          <img :src="item.imageUrl" :alt="item.name" class="item-image" />
-          <div class="item-info">
-            <h3>{{ item.name }}</h3>
-            <p>{{ item.description }}</p>
-            <p>Цена: {{ item.price }} ₽</p>
+      <div class="cart-items">
+        <div v-for="item in cartItems" :key="item.product.id" class="cart-item">
+          <img :src="`http://localhost:3001${item.product.imageUrl}`" :alt="item.product.name" class="cart-item-image" />
+          <div class="cart-item-info">
+            <h3>{{ item.product.name }}</h3>
+            <p>Цена: {{ item.product.price }} ₽</p>
             <p>Количество: {{ item.quantity }}</p>
-            <button @click="removeFromCalculatorCart(index)" class="cancel-btn">
-              Удалить
-            </button>
+            <button @click="removeItemFromCart(item.product.id)">Удалить</button>
           </div>
         </div>
       </div>
-      <p class="order-total">Общая сумма: <strong>{{ totalCalculatorPrice }} ₽</strong></p>
-      <button @click="checkoutFromCalculator" class="checkout-btn">Оформить заказ из калькулятора</button>
-    </div>
 
-    <!-- Обычные товары из корзины -->
-    <div v-if="cart.length" class="orders">
-      <div class="order-card">
-        <h2>Ваш заказ</h2>
-        <p class="order-total">
-          Общая сумма: <strong>{{ totalPrice }} ₽</strong>
-        </p>
-        <div class="order-items">
-          <div v-for="(item, index) in cart" :key="index" class="item-card">
-            <img :src="item.imageUrl" :alt="item.name" class="item-image" />
-            <div class="item-info">
-              <h3>{{ item.name }}</h3>
-              <p>{{ item.description }}</p>
-              <p>Цена: {{ item.price }} ₽</p>
-              <p>Количество: {{ item.quantity }}</p>
-              <button @click="removeFromCart(index)" class="cancel-btn">
-                Удалить
-              </button>
-            </div>
-          </div>
-        </div>
-        <button @click="checkout" class="checkout-btn">Оформить заказ</button>
+      <div class="cart-summary">
+        <p>Общая сумма: {{ totalPrice }} ₽</p>
+        <button class="checkout-btn">Перейти к оформлению</button>
       </div>
     </div>
 
+    <!-- Если корзина пуста -->
     <div v-else>
       <p>Ваша корзина пуста.</p>
     </div>
@@ -64,184 +34,111 @@
 </template>
 
 <script setup>
+import { ref, computed, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import Header from "~/components/Header.vue";
 import Footer from "~/components/Footer.vue";
-import { ref, computed, onMounted } from "vue";
 
-const cart = ref([]);  // Основная корзина
-const calculatorCart = ref([]);  // Корзина из калькулятора
-const addedFromCalculator = ref(false);  // Флаг, если заказ из калькулятора
+const cartItems = ref([]);
+const orderId = ref(localStorage.getItem("orderId"));
 
+// Загружаем товары в корзину при монтировании компонента
 onMounted(() => {
-  const storedCart = JSON.parse(localStorage.getItem("cart")) || [];
-  cart.value = storedCart;
-  
-  const storedCalculatorCart = JSON.parse(localStorage.getItem("calculatorCart")) || [];
-  calculatorCart.value = storedCalculatorCart;
-
-  // Проверка флага, если заказ был добавлен из калькулятора
-  const isAddedFromCalculator = localStorage.getItem("addedFromCalculator");
-  if (isAddedFromCalculator) {
-    addedFromCalculator.value = true;
-    localStorage.removeItem("addedFromCalculator");
+  if (orderId.value) {
+    fetch(`http://localhost:3001/api/orders/${orderId.value}/items`, {
+      headers: {
+        "Authorization": `Bearer ${document.cookie.split("token=")[1]}`,
+      }
+    })
+      .then(response => response.json())
+      .then(data => {
+        cartItems.value = data; // Сохраняем данные о товарах в корзине
+      })
+      .catch(error => console.error("Ошибка загрузки товаров из корзины:", error));
   }
 });
 
-// Удаление товара из обычной корзины
-const removeFromCart = (index) => {
-  cart.value.splice(index, 1);
-  localStorage.setItem("cart", JSON.stringify(cart.value));
+// Удаление товара из корзины
+const removeItemFromCart = (productId) => {
+  cartItems.value = cartItems.value.filter(item => item.product.id !== productId);
+  localStorage.setItem("cart", JSON.stringify(cartItems.value));
 };
 
-// Удаление товара из корзины калькулятора
-const removeFromCalculatorCart = (index) => {
-  calculatorCart.value.splice(index, 1);
-  localStorage.setItem("calculatorCart", JSON.stringify(calculatorCart.value));
-};
-
-// Подсчет общей суммы обычной корзины
-const totalPrice = computed(() =>
-  cart.value.reduce((sum, item) => sum + item.price * item.quantity, 0)
-);
-
-// Подсчет общей суммы корзины из калькулятора
-const totalCalculatorPrice = computed(() =>
-  calculatorCart.value.reduce((sum, item) => sum + item.price * item.quantity, 0)
-);
-
-// Оформление заказа из обычной корзины
-const checkout = () => {
-  alert("Заказ оформлен!");
-  localStorage.removeItem("cart");
-  cart.value = [];
-};
-
-// Оформление заказа из корзины калькулятора
-const checkoutFromCalculator = () => {
-  alert("Заказ из калькулятора оформлен!");
-  localStorage.removeItem("calculatorCart");
-  calculatorCart.value = [];
-};
+// Общая сумма корзины
+const totalPrice = computed(() => {
+  return cartItems.value.reduce((total, item) => total + item.product.price * item.quantity, 0);
+});
 </script>
 
+
 <style scoped>
-.cart-page {
+.cart-content {
   padding: 20px;
-  background-color: #f4f4f4;
+  background-color: #f8f4e6;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  max-width: 900px;
+  margin: 20px auto;
 }
 
-h1 {
-  font-size: 2rem;
-  color: #3e2b1d;
-  margin-bottom: 10px;
-}
-
-p {
-  font-size: 1rem;
-  color: #555;
-  margin-bottom: 20px;
-}
-
-.orders, .calculator-order-card {
+.cart-items {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-.order-card, .calculator-order-card {
-  background-color: #fff;
+.cart-item {
+  display: flex;
+  background-color: #ffffff;
   border-radius: 10px;
-  padding: 15px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.order-card h2, .calculator-order-card h2 {
-  font-size: 1.4rem;
-  color: #3e2b1d;
-}
-
-.order-total {
-  font-size: 1.2rem;
-  color: #ff7f50;
-  margin: 10px 0;
-}
-
-.order-items {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-}
-
-.item-card {
-  display: flex;
-  background-color: #f9f9f9;
-  border-radius: 8px;
   overflow: hidden;
-  width: 100%;
-  max-width: 300px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+  padding: 15px;
 }
 
-.item-image {
-  width: 100px;
-  height: 100px;
+.cart-item-image {
+  width: 150px;
+  height: 150px;
   object-fit: cover;
+  border-radius: 8px;
 }
 
-.item-info {
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+.cart-item-info {
+  margin-left: 20px;
+  flex-grow: 1;
 }
 
-.item-info h3 {
-  font-size: 1.1rem;
-  color: #3e2b1d;
-  margin: 0;
+.cart-item h3 {
+  font-size: 1.2rem;
+  color: #5a3e2b;
+  font-weight: bold;
 }
 
-.item-info p {
-  font-size: 0.9rem;
-  margin: 5px 0;
+.cart-item p {
+  font-size: 1rem;
+  color: #7a5a47;
+  margin-bottom: 8px;
 }
 
-.cancel-btn {
-  background-color: #e74c3c;
-  color: white;
-  border: none;
-  padding: 8px;
-  border-radius: 5px;
-  cursor: pointer;
-  margin-top: 10px;
-}
-
-.cancel-btn:hover {
-  background-color: #c0392b;
+.cart-summary {
+  margin-top: 20px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #ff7f50;
 }
 
 .checkout-btn {
   background-color: #ff7f50;
   color: white;
   border: none;
-  padding: 10px 15px;
-  font-size: 1rem;
+  padding: 12px 18px;
+  font-size: 1.1rem;
   cursor: pointer;
   border-radius: 5px;
-  margin-top: 15px;
+  margin-top: 20px;
 }
 
 .checkout-btn:hover {
   background-color: #ff5722;
-}
-
-/* Стиль для плашки с уведомлением */
-.calculator-notification {
-  background-color: #ffeb3b;
-  padding: 10px;
-  border-radius: 5px;
-  margin-bottom: 20px;
-  font-size: 1rem;
-  color: #3e2b1d;
 }
 </style>

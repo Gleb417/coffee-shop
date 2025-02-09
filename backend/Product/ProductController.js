@@ -1,8 +1,12 @@
-// backend/Product/ProductController.js
 import Product from "./ProductModel.js";
 import Subcategory from "../Subcategory/SubcategoryModel.js";
 import path from "path";
 import fs from "fs";
+import { fileURLToPath } from "url";
+
+// Определение __dirname для ES module
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Получение всех продуктов
 export const getProducts = async (req, res) => {
