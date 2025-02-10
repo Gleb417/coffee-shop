@@ -19,6 +19,13 @@
               <button @click="removeItemFromOrder(item.id, order.id)">Удалить товар</button>
             </div>
           </div>
+
+          <!-- Вывод кастомного напитка, если он есть -->
+          <div v-if="order.customDrink" class="custom-drink">
+            <h4>Кастомный напиток:</h4>
+            <p>{{ order.customDrink.name }}</p>
+            <p>Цена: {{ order.customDrink.price }} ₽</p>
+          </div>
         </div>
 
         <button 
@@ -40,8 +47,9 @@
     <Footer />
   </div>
 </template>
+
 <script setup>
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted } from "vue";
 import Header from "~/components/Header.vue";
 import Footer from "~/components/Footer.vue";
 
@@ -83,12 +91,41 @@ const fetchOrders = () => {
   })
     .then(response => response.json())
     .then(data => {
-      orders.value = data.map(order => ({
-        ...order,
-        total_price: calculateTotalPrice(order.items), // Расчитываем общую сумму
-      }));
+      orders.value = data.map(order => {
+        const customDrinkId = order.CDrink_id;
+        if (customDrinkId) {
+          fetchCustomDrink(customDrinkId, order);  // Загружаем кастомный напиток
+        }
+        return {
+          ...order,
+          total_price: calculateTotalPrice(order.items),
+        };
+      });
     })
     .catch(error => console.error("Ошибка загрузки заказов:", error));
+};
+
+// Функция загрузки информации о кастомном напитке
+const fetchCustomDrink = async (customDrinkId, order) => {
+  try {
+    const response = await fetch(`http://localhost:3001/api/cdrink/${customDrinkId}`, {
+      headers: {
+        "Authorization": `Bearer ${document.cookie.split("token=")[1]}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Ошибка загрузки кастомного напитка");
+    }
+
+    const data = await response.json();
+    console.log("Загружен кастомный напиток:", data); // Логируем для отладки
+    order.customDrink = data; // Добавляем кастомный напиток в заказ
+    // Перерисовываем заказ после получения кастомного напитка
+    orders.value = [...orders.value];
+  } catch (error) {
+    console.error("Ошибка при загрузке кастомного напитка:", error);
+  }
 };
 
 // Функция для вычисления общей суммы заказа

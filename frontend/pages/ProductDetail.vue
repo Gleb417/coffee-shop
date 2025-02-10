@@ -1,7 +1,7 @@
 <template>
   <div>
     <Header />
-
+    
     <!-- Показать статус авторизации -->
     <div v-if="isAuthenticated">
       <p>Вы зарегистрированы! Токен найден.</p>
@@ -25,16 +25,18 @@
             <h1>{{ product.name }}</h1>
             <p class="description">Описание товара: {{ product.description }}</p>
             <p class="price">Цена: {{ product.price }} ₽</p>
-            <p>Тип: {{ product.type }}</p>
+
+            <!-- Перевод типа продукта на русский -->
+            <p>Тип: {{ translatedType }}</p>
+
+            <!-- Размер только для напитков -->
+            <p v-if="product.type === 'drink'">Размер: {{ translatedSize }}</p>
             
-            <!-- Размер только для напитков и кофе -->
-            <p v-if="product.type === 'drink' || product.type === 'coffee'">Размер: {{ product.size }}</p>
-            
-            <!-- Вес только для тортов -->
-            <p v-if="product.type === 'cake'">Вес: {{ product.weight }} г</p>
+            <!-- Вес только для тортов и десертов -->
+            <p v-if="product.type === 'cake' || product.type === 'dessert'">Вес: {{ product.weight }} г</p>
 
             <!-- Выводим название подкатегории -->
-            <p>Подкатегория: {{ product.subcategoryName }}</p>
+            <p>Подкатегория: {{ translatedSubcategory }}</p>
 
             <!-- Кнопка добавления в корзину -->
             <button @click="addToCart" class="add-to-cart-btn">Добавить в корзину</button>
@@ -47,8 +49,9 @@
     <Footer />
   </div>
 </template>
+
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import Header from "~/components/Header.vue";
 import Footer from "~/components/Footer.vue";
@@ -58,6 +61,23 @@ const isAuthenticated = ref(false); // для статуса аутентифи�
 const product = ref(null); // хранение информации о продукте
 const orderId = ref(null); // Храним orderId
 const router = useRouter();
+
+// Маппинг числовых идентификаторов подкатегорий на текст
+const subcategoryMapping = {
+  1: 'Напитки',
+  2: 'Кофе',
+  3: 'Торты',
+  4: 'Десерты',
+  5: 'Пироги',
+  // добавьте сюда другие подкатегории по вашему усмотрению
+};
+
+// Маппинг для перевода размера напитка на русский
+const sizeTranslation = {
+  Small: 'Малый',
+  Medium: 'Средний',
+  Large: 'Большой',
+};
 
 // Функция для проверки наличия токена в cookies и получения userId из токена
 const getUserIdFromToken = () => {
@@ -200,9 +220,23 @@ const checkCookieAuth = () => {
   const token = document.cookie.split("; ").find((row) => row.startsWith("token="));
   isAuthenticated.value = !!token; // Если токен найден, считаем пользователя авторизованным
 };
+
+// Перевод типа продукта на русский
+const typeTranslations = {
+  drink: 'Напиток',
+  coffee: 'Кофе',
+  cake: 'Торт',
+  dessert: 'Десерт',
+};
+
+const translatedType = computed(() => typeTranslations[product.value.type] || product.value.type);
+
+// Перевод подкатегории
+const translatedSubcategory = computed(() => subcategoryMapping[product.value.subcategory_id] || 'Неизвестная подкатегория');
+
+// Перевод размера напитка
+const translatedSize = computed(() => sizeTranslation[product.value.size] || product.value.size);
 </script>
-
-
 
 <style scoped>
 .product-detail-content {

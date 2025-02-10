@@ -49,10 +49,7 @@
         </div>
 
         <!-- Шаг 3: Меню для выбора чая или сока -->
-        <div
-          v-if="selectedDrink && (selectedDrink === 2 || selectedDrink === 3)"
-          class="step"
-        >
+        <div v-if="selectedDrink && (selectedDrink === 2 || selectedDrink === 3)" class="step">
           <h2>Выберите разновидность</h2>
           <div v-if="selectedDrink === 2" class="drink-varieties">
             <div
@@ -107,12 +104,7 @@
         </div>
 
         <!-- Шаг 4: С собой или в кофейне -->
-        <div
-          class="step"
-          v-if="
-            selectedDrink && (selectedJuice || selectedTea || selectedCoffee)
-          "
-        >
+        <div v-if="selectedDrink && (selectedJuice || selectedTea || selectedCoffee)" class="step">
           <h2>Хотите с собой или в кофейне?</h2>
           <div class="options">
             <button
@@ -133,7 +125,7 @@
         </div>
 
         <!-- Шаг 5: Добавки -->
-        <div class="step" v-if="isToGo !== null">
+        <div v-if="isToGo !== null" class="step">
           <h2>Выберите добавки</h2>
           <div class="add-ons">
             <div
@@ -152,7 +144,7 @@
         </div>
 
         <!-- Шаг 6: Подтверждение заказа -->
-        <div class="step" v-if="selectedAddOns.length > 0 || isToGo !== null">
+        <div v-if="selectedAddOns.length > 0 || isToGo !== null" class="step">
           <button
             class="confirm-button"
             @click="confirmOrder"
@@ -280,18 +272,9 @@ const toggleAddOn = (id) => {
 };
 
 // Подтверждение заказа
-const confirmOrder = () => {
+const confirmOrder = async () => {
   orderConfirmed.value = true;
-  saveOrderToCart();
-  // Перенаправление в корзину
-  setTimeout(() => {
-    window.location.href = "/cart"; // Перенаправляем на страницу корзины
-  }, 500);
-};
-
-// Сохранение заказа в корзину
-const saveOrderToCart = () => {
-  const order = {
+  const orderDetails = {
     glass: selectedGlass.value,
     drink: selectedDrink.value,
     coffee: selectedCoffee.value,
@@ -300,51 +283,42 @@ const saveOrderToCart = () => {
     option: isToGo.value,
     addOns: selectedAddOns.value,
   };
-
-  let cart = JSON.parse(localStorage.getItem("cart")) || [];
-  cart.push(order);
-  localStorage.setItem("cart", JSON.stringify(cart));
+  
+  await addProductToOrder(orderDetails); // Отправляем запрос на добавление товара в заказ
+  setTimeout(() => {
+    window.location.href = "/cart"; // Перенаправляем на страницу корзины
+  }, 500);
 };
 
-// Метод для возврата на главную
-const goHome = () => {
-  window.location.href = "/"; // Переход на главную страницу
+// Функция для добавления товара в заказ через API
+const addProductToOrder = async (orderDetails) => {
+  try {
+    const response = await fetch('https://your-api-url.com/orders', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(orderDetails),
+    });
+
+    if (!response.ok) {
+      throw new Error('Ошибка при добавлении товара в заказ');
+    }
+
+    const responseData = await response.json();
+    console.log('Продукт успешно добавлен в заказ:', responseData);
+    updateCart(responseData);
+  } catch (error) {
+    console.error('Ошибка:', error);
+  }
 };
 
-// Выбранные варианты (стакан, напиток, добавки)
-const selectedGlassName = computed(() => {
-  const glass = glasses.find((g) => g.id === selectedGlass.value);
-  return glass ? glass.name : "";
-});
-
-const selectedDrinkName = computed(() => {
-  const drink = drinks.find((d) => d.id === selectedDrink.value);
-  return drink ? drink.name : "";
-});
-
-const selectedCoffeeName = computed(() => {
-  const coffee = coffeeTypes.find((c) => c.id === selectedCoffee.value);
-  return coffee ? coffee.name : "";
-});
-
-const selectedJuiceName = computed(() => {
-  const juice = juices.find((j) => j.id === selectedJuice.value);
-  return juice ? juice.name : "";
-});
-
-const selectedTeaName = computed(() => {
-  const tea = teas.find((t) => t.id === selectedTea.value);
-  return tea ? tea.name : "";
-});
-
-const selectedAddOnsNames = computed(() => {
-  return selectedAddOns.value
-    .map((id) => {
-      const addon = addOns.find((a) => a.id === id);
-      return addon ? addon.name : "";
-    })
-    .filter(Boolean);
-});
+// Функция для обновления корзины
+const updateCart = (orderData) => {
+  let cart = JSON.parse(localStorage.getItem('cart')) || [];
+  cart.push(orderData);
+  localStorage.setItem('cart', JSON.stringify(cart));
+};
 
 onMounted(() => {
   AOS.init({
@@ -353,7 +327,6 @@ onMounted(() => {
   });
 });
 </script>
-
 
 
 <style scoped>

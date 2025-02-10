@@ -1,6 +1,5 @@
 <template>
-  <div class="category-page"
-  style="padding-top: 0px;">
+  <div class="category-page" style="padding-top: 0px;">
     <Header />
 
     <div class="content">
@@ -16,12 +15,6 @@
           class="search-input"
         />
 
-        <select v-model="selectedType" class="filter-select">
-          <option value="">Все напитки</option>
-          <option value="coffee">Кофе</option>
-          <option value="tea">Чай</option>
-          <option value="juice">Сок</option>
-        </select>
 
         <select v-model="selectedSize" class="filter-select">
           <option value="">Любой размер</option>
@@ -80,7 +73,7 @@ onMounted(() => {
 // Фильтрация напитков
 const filteredDrinks = computed(() => {
   return products.value
-    .filter((product) => product.type === "drink")
+    .filter((product) => product.type === "drink")  // Фильтрация по типу напитка
     .filter((product) => 
       searchQuery.value 
         ? product.name.toLowerCase().includes(searchQuery.value.toLowerCase()) 
@@ -88,7 +81,7 @@ const filteredDrinks = computed(() => {
     )
     .filter((product) => 
       selectedType.value 
-        ? product.category === selectedType.value 
+        ? product.subcategory === selectedType.value  // Фильтрация по подкатегории
         : true
     )
     .filter((product) => 

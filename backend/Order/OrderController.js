@@ -137,7 +137,7 @@ export const getOrderItemsByOrderId = async (req, res) => {
 // Создать товар в заказе
 export const createOrderItem = async (req, res) => {
 	try {
-		const { order_id, product_id, quantity, price } = req.body
+		const { order_id, product_id, quantity, price, CDrink_id } = req.body
 
 		// Создаем товар в заказе
 		const newItem = await OrderItem.create({
@@ -145,6 +145,7 @@ export const createOrderItem = async (req, res) => {
 			product_id,
 			quantity,
 			price,
+			CDrink_id
 		})
 
 		res.status(201).json(newItem)

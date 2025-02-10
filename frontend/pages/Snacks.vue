@@ -1,5 +1,5 @@
 <template>
-  <div class="category-page">
+  <div class="category-page" style="padding-top: 0px;">
     <!-- Подключаем Header -->
     <Header />
 
