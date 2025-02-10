@@ -2,143 +2,251 @@
   <div>
     <Header />
 
-    <!-- Корзина -->
-    <div v-if="cartItems.length > 0" class="cart-content">
-      <h1>Ваша корзина</h1>
+    <div v-if="orders.length > 0" class="orders-container">
+      <h1>Ваши заказы</h1>
 
-      <div class="cart-items">
-        <div v-for="item in cartItems" :key="item.product.id" class="cart-item">
-          <img :src="`http://localhost:3001${item.product.imageUrl}`" :alt="item.product.name" class="cart-item-image" />
-          <div class="cart-item-info">
-            <h3>{{ item.product.name }}</h3>
-            <p>Цена: {{ item.product.price }} ₽</p>
-            <p>Количество: {{ item.quantity }}</p>
-            <button @click="removeItemFromCart(item.product.id)">Удалить</button>
+      <div v-for="order in orders" :key="order.id" class="order">
+        <h2>Заказ №{{ order.id }}</h2>
+        <p>Общая сумма: {{ order.total_price }} ₽</p>
+
+        <div class="order-items">
+          <h3>Товары:</h3>
+          <div v-for="item in order.items" :key="item.id" class="order-item">
+            <img :src="`http://localhost:3001${item.product.imageUrl}`" :alt="item.product.name" class="item-image" />
+            <div class="item-info">
+              <h4>{{ item.product.name }}</h4>
+              <p>Цена: {{ item.price }} ₽</p>
+              <button @click="removeItemFromOrder(item.id, order.id)">Удалить товар</button>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="cart-summary">
-        <p>Общая сумма: {{ totalPrice }} ₽</p>
-        <button class="checkout-btn">Перейти к оформлению</button>
+        <button 
+          @click="removeOrder(order.id)" 
+          class="delete-order-btn" 
+          :disabled="isOrderExpired(order)">
+          Удалить заказ
+        </button>
       </div>
     </div>
 
-    <!-- Если корзина пуста -->
     <div v-else>
-      <p>Ваша корзина пуста.</p>
+      <p>У вас нет заказов.</p>
     </div>
+
+    <!-- Кнопка оформления нового заказа -->
+    <button @click="createOrder" class="create-order-btn">Оформить заказ</button>
 
     <Footer />
   </div>
 </template>
-
 <script setup>
-import { ref, computed, onMounted } from "vue";
-import { useRouter } from "vue-router";
+import { ref, onMounted, computed } from "vue";
 import Header from "~/components/Header.vue";
 import Footer from "~/components/Footer.vue";
 
-const cartItems = ref([]);
-const orderId = ref(localStorage.getItem("orderId"));
+const orders = ref([]); // Храним заказы
+const userId = ref(null);
 
-// Загружаем товары в корзину при монтировании компонента
+// Получаем userId из токена
+const getUserIdFromToken = () => {
+  if (typeof window === "undefined") return null;
+
+  const token = document.cookie.split("; ").find((row) => row.startsWith("token="))?.split("=")[1];
+  if (!token) return null;
+
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const decodedData = JSON.parse(atob(base64));
+    return decodedData.id;
+  } catch (error) {
+    console.error("Ошибка декодирования токена:", error);
+    return null;
+  }
+};
+
+// Загружаем заказы при монтировании
 onMounted(() => {
-  if (orderId.value) {
-    fetch(`http://localhost:3001/api/orders/${orderId.value}/items`, {
-      headers: {
-        "Authorization": `Bearer ${document.cookie.split("token=")[1]}`,
-      }
-    })
-      .then(response => response.json())
-      .then(data => {
-        cartItems.value = data; // Сохраняем данные о товарах в корзине
-      })
-      .catch(error => console.error("Ошибка загрузки товаров из корзины:", error));
+  userId.value = getUserIdFromToken();
+  if (userId.value) {
+    fetchOrders();
   }
 });
 
-// Удаление товара из корзины
-const removeItemFromCart = (productId) => {
-  cartItems.value = cartItems.value.filter(item => item.product.id !== productId);
-  localStorage.setItem("cart", JSON.stringify(cartItems.value));
+// Функция загрузки заказов
+const fetchOrders = () => {
+  fetch(`http://localhost:3001/api/orders/order/user/${userId.value}`, {
+    headers: {
+      "Authorization": `Bearer ${document.cookie.split("token=")[1]}`,
+    }
+  })
+    .then(response => response.json())
+    .then(data => {
+      orders.value = data.map(order => ({
+        ...order,
+        total_price: calculateTotalPrice(order.items), // Расчитываем общую сумму
+      }));
+    })
+    .catch(error => console.error("Ошибка загрузки заказов:", error));
 };
 
-// Общая сумма корзины
-const totalPrice = computed(() => {
-  return cartItems.value.reduce((total, item) => total + item.product.price * item.quantity, 0);
-});
+// Функция для вычисления общей суммы заказа
+const calculateTotalPrice = (items) => {
+  return items.reduce((total, item) => total + (parseFloat(item.price) * item.quantity), 0).toFixed(2);
+};
+
+// Функция удаления заказа
+const removeOrder = async (orderId) => {
+  try {
+    const response = await fetch(`http://localhost:3001/api/orders/order/delete/${orderId}`, {
+      method: "DELETE",
+      headers: {
+        "Authorization": `Bearer ${document.cookie.split("token=")[1]}`,
+      },
+    });
+
+    if (!response.ok) throw new Error("Ошибка удаления заказа");
+
+    // Обновляем список заказов после удаления
+    orders.value = orders.value.filter(order => order.id !== orderId);
+    console.log(`Заказ ${orderId} удалён.`);
+  } catch (error) {
+    console.error("Ошибка при удалении заказа:", error);
+  }
+};
+
+// Функция удаления товара из заказа
+const removeItemFromOrder = async (itemId, orderId) => {
+  try {
+    const response = await fetch(`http://localhost:3001/api/orders/orderItem/delete/${itemId}`, {
+      method: "DELETE",
+      headers: {
+        "Authorization": `Bearer ${document.cookie.split("token=")[1]}`,
+      },
+    });
+
+    if (!response.ok) throw new Error("Ошибка удаления товара");
+
+    // Удаляем товар из списка заказов
+    const order = orders.value.find(order => order.id === orderId);
+    if (order) {
+      order.items = order.items.filter(item => item.id !== itemId);
+      order.total_price = calculateTotalPrice(order.items); // Пересчитываем общую сумму
+    }
+    console.log(`Товар ${itemId} удалён из заказа ${orderId}.`);
+  } catch (error) {
+    console.error("Ошибка при удалении товара:", error);
+  }
+};
+
+// Проверка истечения времени
+const isOrderExpired = (order) => {
+  const pickupTime = new Date(order.pickupTime);
+  return new Date() > pickupTime;
+};
+
+// Функция создания нового заказа
+const createOrder = async () => {
+  try {
+    const response = await fetch(`http://localhost:3001/api/orders/order/create`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${document.cookie.split("token=")[1]}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        userId: userId.value,
+        items: [], // Здесь нужно добавить товары для заказа
+        total_price: 1000, // Установить общую цену, можно будет адаптировать по вашему API
+        pickupTime: new Date(new Date().getTime() + 60 * 60 * 1000).toISOString(), // Время забора через 1 час
+      }),
+    });
+
+    if (!response.ok) throw new Error("Ошибка создания заказа");
+
+    const newOrder = await response.json();
+    orders.value.push({
+      ...newOrder,
+      total_price: 0, // Пока не будет товаров в заказе, общая цена 0
+    }); // Добавляем новый заказ в список
+    console.log("Новый заказ оформлен", newOrder);
+  } catch (error) {
+    console.error("Ошибка при создании заказа:", error);
+  }
+};
 </script>
 
-
 <style scoped>
-.cart-content {
+.orders-container {
   padding: 20px;
+  max-width: 900px;
+  margin: 20px auto;
   background-color: #f8f4e6;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  max-width: 900px;
-  margin: 20px auto;
 }
 
-.cart-items {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.cart-item {
-  display: flex;
-  background-color: #ffffff;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+.order {
+  background: white;
   padding: 15px;
-}
-
-.cart-item-image {
-  width: 150px;
-  height: 150px;
-  object-fit: cover;
+  margin-bottom: 20px;
   border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.cart-item-info {
-  margin-left: 20px;
-  flex-grow: 1;
-}
-
-.cart-item h3 {
-  font-size: 1.2rem;
+.order h2 {
   color: #5a3e2b;
-  font-weight: bold;
 }
 
-.cart-item p {
-  font-size: 1rem;
-  color: #7a5a47;
-  margin-bottom: 8px;
+.order-items {
+  margin-top: 10px;
 }
 
-.cart-summary {
-  margin-top: 20px;
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: #ff7f50;
+.order-item {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  background: #fff7f0;
+  margin-bottom: 10px;
+  border-radius: 5px;
 }
 
-.checkout-btn {
-  background-color: #ff7f50;
+.item-image {
+  width: 80px;
+  height: 80px;
+  border-radius: 5px;
+}
+
+.item-info {
+  margin-left: 15px;
+}
+
+.delete-order-btn {
+  background-color: red;
   color: white;
   border: none;
-  padding: 12px 18px;
-  font-size: 1.1rem;
+  padding: 10px;
+  cursor: pointer;
+  border-radius: 5px;
+  margin-top: 10px;
+}
+
+.delete-order-btn:hover {
+  background-color: darkred;
+}
+
+.create-order-btn {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 12px 20px;
   cursor: pointer;
   border-radius: 5px;
   margin-top: 20px;
 }
 
-.checkout-btn:hover {
-  background-color: #ff5722;
+.create-order-btn:hover {
+  background-color: #45a049;
 }
 </style>

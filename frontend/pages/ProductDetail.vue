@@ -47,7 +47,6 @@
     <Footer />
   </div>
 </template>
-
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
@@ -57,12 +56,11 @@ import Footer from "~/components/Footer.vue";
 // Переменные
 const isAuthenticated = ref(false); // для статуса аутентификации
 const product = ref(null); // хранение информации о продукте
-const cart = ref([]); // Массив для хранения товаров в корзине
+const orderId = ref(null); // Храним orderId
 const router = useRouter();
-let orderId = null; // Храним orderId на уровне компонента
 
-// Функция для проверки наличия токена в cookies и получения id из токена
-const getIdFromToken = () => {
+// Функция для проверки наличия токена в cookies и получения userId из токена
+const getUserIdFromToken = () => {
   const token = document.cookie.split("; ").find((row) => row.startsWith("token="))?.split("=")[1];
   if (!token) return null;
 
@@ -71,78 +69,115 @@ const getIdFromToken = () => {
   const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
   const decodedData = JSON.parse(window.atob(base64));
   return decodedData.id; // Получаем id из декодированного токена
-}
+};
 
 // Функция для создания нового заказа
-const createOrder = async (totalPrice) => {
-  const userId = getIdFromToken(); // Получаем id из токена
+const createOrder = async (userId) => {
+  try {
+    const orderResponse = await fetch("http://localhost:3001/api/orders/order/create", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${document.cookie.split("token=")[1]}`,
+      },
+      body: JSON.stringify({
+        user_id: userId,
+        total_price: product.value.price, // Отправляем цену товара
+      }),
+    });
 
-  if (product.value && isAuthenticated.value && userId) {
-    try {
-      // Создаем новый заказ, передаем только user_id и total_price
-      const orderResponse = await fetch("http://localhost:3001/api/orders/order/create", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${document.cookie.split("token=")[1]}`,
-        },
-        body: JSON.stringify({
-          user_id: userId, // Передаем user_id из токена
-          total_price: totalPrice,
-        }),
-      });
-
-      if (!orderResponse.ok) {
-        throw new Error('Ошибка при создании заказа');
-      }
-
-      const orderData = await orderResponse.json();
-      orderId = orderData.id; // Сохраняем ID заказа
-      localStorage.setItem("orderId", orderId); // Сохраняем orderId в локальное хранилище
-    } catch (error) {
-      console.error("Ошибка при создании заказа:", error.message);
+    if (!orderResponse.ok) {
+      throw new Error('Ошибка при создании заказа');
     }
+
+    const orderData = await orderResponse.json();
+    orderId.value = orderData.id; // Сохраняем ID заказа
+    if (typeof window !== "undefined") {
+      localStorage.setItem("orderId", orderId.value); // Сохраняем orderId в локальное хранилище
+    }
+    console.log("Новый заказ создан, ID:", orderId.value);
+    return orderId.value;
+  } catch (error) {
+    console.error("Ошибка при создании заказа:", error.message);
   }
 };
 
 // Функция для добавления товара в заказ
+const addItemToOrder = async (orderId, productId, price) => {
+  try {
+    const addItemResponse = await fetch("http://localhost:3001/api/orders/orderItem/create", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${document.cookie.split("token=")[1]}`,
+      },
+      body: JSON.stringify({
+        order_id: orderId, // Добавляем товар в текущий заказ
+        product_id: productId, // id продукта
+        quantity: 1, // Количество товара
+        price: price, // Цена товара
+      }),
+    });
+
+    if (!addItemResponse.ok) {
+      throw new Error('Ошибка при добавлении товара в заказ');
+    }
+
+    const addItemData = await addItemResponse.json();
+    console.log("Товар успешно добавлен в заказ:", addItemData);
+  } catch (error) {
+    console.error("Ошибка при добавлении товара в заказ:", error.message);
+  }
+};
+
+// Функция для добавления товара в корзину
 const addToCart = async () => {
-  const userId = getIdFromToken(); // Получаем id из токена
+  const userId = getUserIdFromToken(); // Получаем userId из токена
 
   if (product.value && isAuthenticated.value && userId) {
-    try {
-      // Если у нас еще нет orderId, создаем новый заказ
-      if (!orderId) {
-        await createOrder(product.value.price); // Создаем заказ с ценой товара
-      }
+    // Проверяем, если уже есть orderId в localStorage, то используем его
+    if (!orderId.value) {
+      orderId.value = localStorage.getItem("orderId"); // Получаем orderId из localStorage, если есть
+    }
 
-      // Добавляем товар в существующий или новый заказ
-      const itemResponse = await fetch("http://localhost:3001/api/orders/orderItem/create", {
-        method: "POST",
+    try {
+      // Пытаемся получить заказ для текущего userId
+      const existingOrderResponse = await fetch(`http://localhost:3001/api/orders/order/user/${userId}`, {
+        method: "GET",
         headers: {
-          "Content-Type": "application/json",
           "Authorization": `Bearer ${document.cookie.split("token=")[1]}`,
         },
-        body: JSON.stringify({
-          orderId: orderId, // Используем существующий или новый orderId
-          price: product.value.price, // Передаем цену товара
-        }),
       });
 
-      if (!itemResponse.ok) {
-        throw new Error('Ошибка при добавлении товара в корзину');
+      // Проверяем ответ
+      const existingOrderData = await existingOrderResponse.json();
+      console.log("Полученные данные о заказе:", existingOrderData); // Логируем данные для отладки
+
+      if (existingOrderResponse.ok && Array.isArray(existingOrderData) && existingOrderData.length > 0) {
+        // Если заказ найден, добавляем товар в этот заказ
+        orderId.value = existingOrderData[0].id; // Используем существующий заказ
+        localStorage.setItem("orderId", orderId.value); // Сохраняем в localStorage
+        console.log("Используем существующий заказ с ID:", orderId.value);
+
+        // Добавляем товар в этот заказ
+        await addItemToOrder(orderId.value, product.value.id, product.value.price);
+      } else {
+        // Если заказ не найден, создаем новый заказ
+        console.log("Заказ не найден, создаем новый...");
+        orderId.value = await createOrder(userId); // Создаем новый заказ и получаем его ID
+        // Добавляем товар в новый заказ
+        await addItemToOrder(orderId.value, product.value.id, product.value.price);
       }
 
-      // Добавляем товар в локальную корзину (реактивное состояние)
-      cart.value.push(product.value);
-      localStorage.setItem('cart', JSON.stringify(cart.value)); // Сохраняем в локальное хранилище
-
-      console.log("Товар успешно добавлен в корзину");
-      router.push({ name: "cart" }); // Перенаправляем на страницу корзины
-
     } catch (error) {
-      console.error("Ошибка:", error.message);
+      console.error("Ошибка при запросе существующего заказа:", error);
+      orderId.value = await createOrder(userId); // Создаем новый заказ, если ошибка в запросе
+      // Добавляем товар в новый заказ
+      await addItemToOrder(orderId.value, product.value.id, product.value.price);
     }
+
+    // Перенаправление на страницу корзины
+    router.push({ name: "cart" });
   } else {
     console.log("Пользователь не авторизован или продукт отсутствует.");
   }
@@ -166,6 +201,8 @@ const checkCookieAuth = () => {
   isAuthenticated.value = !!token; // Если токен найден, считаем пользователя авторизованным
 };
 </script>
+
+
 
 <style scoped>
 .product-detail-content {
