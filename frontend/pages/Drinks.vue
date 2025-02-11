@@ -95,6 +95,7 @@ const getSubcategoryName = (id) => {
 const filteredDrinks = computed(() => {
   return products.value
     .filter((product) => product.type === "drink")  // Фильтрация по типу напитка
+    .filter((product) => product.status !== "custom")  // Исключаем товары с status "custom"
     .filter((product) => 
       searchQuery.value 
         ? product.name.toLowerCase().includes(searchQuery.value.toLowerCase()) 
@@ -117,6 +118,7 @@ const getImageUrl = (imagePath) => {
   return imagePath ? `http://localhost:3001${imagePath}` : "/images/default.jpg";
 };
 </script>
+
 
 <style scoped>
 /* Основной контейнер */

@@ -190,14 +190,14 @@ const isOrderExpired = (order) => {
 // Функция изменения статуса заказа на "doing"
 const markOrderAsDoing = async (orderId) => {
   try {
-    const response = await fetch(`http://localhost:3001/api/orders/status/${orderId}`, {
-      method: "PUT",
-      headers: {
-        "Authorization": `Bearer ${document.cookie.split("token=")[1]}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ status: "doing" }),
-    });
+    const response = await fetch(`http://localhost:3001/api/orders/order/update/${orderId}`, {
+  method: "PUT",
+  headers: {
+    "Authorization": `Bearer ${document.cookie.split("token=")[1]}`,
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({ status: "doing" }),
+});
 
     if (!response.ok) throw new Error("Ошибка обновления статуса заказа");
 
