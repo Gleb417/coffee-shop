@@ -1,5 +1,5 @@
 // models/ProductModel.js
-import { DataTypes, Model } from 'sequelize'
+import { DataTypes, DATE, Model } from 'sequelize'
 import sequelize from '../config/database.js'
 import Subcategory from '../Subcategory/SubcategoryModel.js'
 
@@ -55,6 +55,11 @@ Product.init(
 			type: DataTypes.DATE,
 			defaultValue: DataTypes.NOW,
 		},
+		status: {
+			type: DataTypes.ENUM('default', 'custom'),
+			allowNull: false,
+			defaultValue: 'default',  // добавлено значение по умолчанию
+		  }
 	},
 	{
 		sequelize,

@@ -15,13 +15,11 @@
           class="search-input"
         />
 
-
         <select v-model="selectedSize" class="filter-select">
           <option value="">Любой размер</option>
-          <option value="small">Маленький</option>
-          <option value="medium">Средний</option>
-          <option value="large">Большой</option>
+          <option v-for="size in sizes" :key="size" :value="size">{{ size }}</option>
         </select>
+
       </div>
 
       <div class="products">
@@ -39,6 +37,7 @@
           <div class="product-info">
             <h3 class="product-name">{{ product.name }}</h3>
             <p class="product-description">{{ product.description }}</p>
+            <p class="product-subcategory">Подкатегория: {{ getSubcategoryName(product.subcategory_id) }}</p>
             <p class="product-size">Размер: {{ product.size }}</p>
             <p class="product-price">{{ product.price }} ₽</p>
           </div>
@@ -57,8 +56,11 @@ import Footer from "~/components/Footer.vue";
 
 const products = ref([]);
 const searchQuery = ref("");
-const selectedType = ref("");
 const selectedSize = ref("");
+const selectedSubcategory = ref("");
+const sizes = ref([]);  // Для размеров
+const subcategories = ref([]);  // Для подкатегорий
+const subcategoryMap = ref({});  // Маппинг ID -> название подкатегории
 
 // Загрузка данных
 onMounted(() => {
@@ -66,9 +68,28 @@ onMounted(() => {
     .then((response) => response.json())
     .then((data) => {
       products.value = data;
+
+      // Получаем уникальные размеры
+      sizes.value = [...new Set(data.map(product => product.size))];
+
+      // Создаем маппинг подкатегорий
+      subcategoryMap.value = {
+        1: "Кофе",  // Пример: ID = 1 это "Кофе"
+        2: "Чай",   // ID = 2 это "Чай"
+        3: "Соки",  // ID = 3 это "Соки"
+        // и так далее, добавьте ваши подкатегории по ID
+      };
+
+      // Получаем уникальные подкатегории для фильтра
+      subcategories.value = [...new Set(data.map(product => product.subcategory_id))];
     })
     .catch((error) => console.error("Ошибка загрузки данных:", error));
 });
+
+// Функция для получения названия подкатегории по ID
+const getSubcategoryName = (id) => {
+  return subcategoryMap.value[id] || "Неизвестно";  // Возвращаем название, если есть, или "Неизвестно"
+};
 
 // Фильтрация напитков
 const filteredDrinks = computed(() => {
@@ -80,13 +101,13 @@ const filteredDrinks = computed(() => {
         : true
     )
     .filter((product) => 
-      selectedType.value 
-        ? product.subcategory === selectedType.value  // Фильтрация по подкатегории
+      selectedSize.value 
+        ? product.size === selectedSize.value 
         : true
     )
     .filter((product) => 
-      selectedSize.value 
-        ? product.size === selectedSize.value 
+      selectedSubcategory.value 
+        ? product.subcategory_id === selectedSubcategory.value 
         : true
     );
 });
@@ -194,6 +215,12 @@ h1 {
   font-size: 0.9rem;
   color: #77685d;
   margin: 8px 0;
+}
+
+.product-subcategory {
+  font-size: 0.9rem;
+  color: #997a66;
+  margin: 5px 0;
 }
 
 .product-size {

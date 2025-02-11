@@ -2,7 +2,6 @@ import { DataTypes, Model } from 'sequelize';
 import sequelize from '../config/database.js';
 import User from '../User/UserModel.js';
 import Product from '../Product/ProductModel.js';
-import Cdrink from '../Cdrink/CdrinkModel.js'; // Импорт модели Cdrink
 
 class Order extends Model {}
 
@@ -20,6 +19,11 @@ Order.init(
     total_price: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
+    },
+    status: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: 'registration', // Устанавливаем дефолтное значение для статуса
     },
     created_at: {
       type: DataTypes.DATE,
@@ -53,11 +57,7 @@ OrderItem.init(
     },
     product_id: {
       type: DataTypes.INTEGER,
-      allowNull: true,
-    },
-    CDrink_id: {
-      type: DataTypes.INTEGER,
-      allowNull: true, // Мы допускаем, что OrderItem может быть с продуктом или кастомным напитком
+      allowNull: false,
     },
     quantity: {
       type: DataTypes.INTEGER,
@@ -95,22 +95,9 @@ OrderItem.belongsTo(Product, {
   as: 'product', // Связь с продуктами
   onDelete: 'CASCADE',
 });
-
-OrderItem.belongsTo(Cdrink, {
-  foreignKey: 'CDrink_id',
-  as: 'Cdrink', // Связь с кастомным напитком
-  onDelete: 'CASCADE',
-});
-
 Product.hasMany(OrderItem, {
   foreignKey: 'product_id',
   as: 'orderItems', // Если нужно использовать в include
-  onDelete: 'CASCADE',
-});
-
-Cdrink.hasMany(OrderItem, {
-  foreignKey: 'CDrink_id',
-  as: 'orderItems', // Связь с кастомным напитком в order_items
   onDelete: 'CASCADE',
 });
 

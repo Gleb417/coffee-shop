@@ -35,6 +35,7 @@ export const createProduct = async (req, res) => {
       weight,
       filling,
       subcategory_id,
+      status,  // добавляем status в тело запроса
     } = req.body;
 
     // Проверка на существование подкатегории
@@ -56,6 +57,9 @@ export const createProduct = async (req, res) => {
     // Путь к загруженному изображению
     const imageUrl = req.file ? `/uploads/product/${req.file.filename}` : null;
 
+    // Если статус не передан, устанавливаем "default"
+    const productStatus = status || 'default';
+
     // Создаем продукт в базе данных
     const product = await Product.create({
       name,
@@ -67,6 +71,7 @@ export const createProduct = async (req, res) => {
       filling,
       imageUrl,
       subcategory_id,
+      status: productStatus,  // передаем статус
     });
 
     res.status(201).json({ message: "Продукт успешно создан", product });
@@ -98,6 +103,7 @@ export const updateProduct = async (req, res) => {
       filling,
       imageUrl,
       subcategory_id,
+      status,  // добавляем status в тело запроса для обновления
     } = req.body;
 
     // Проверка на существование продукта
@@ -116,6 +122,8 @@ export const updateProduct = async (req, res) => {
     product.filling = filling;
     product.imageUrl = imageUrl;
     product.subcategory_id = subcategory_id;
+    product.status = status || product.status; // если status не передан, оставляем текущий
+
     await product.save();
 
     res.status(200).json({ message: "Продукт успешно обновлён", product });
@@ -143,6 +151,7 @@ export const deleteProduct = async (req, res) => {
   }
 };
 
+// Получение продукта по ID
 export const getProductById = async (req, res) => {
   try {
     const productId = req.params.id;

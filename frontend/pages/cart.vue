@@ -16,7 +16,7 @@
             <div class="item-info">
               <h4>{{ item.product.name }}</h4>
               <p>Цена: {{ item.price }} ₽</p>
-              <button @click="removeItemFromOrder(item.id, order.id)">Удалить товар</button>
+              <button v-if="order.status !== 'doing'" @click="removeItemFromOrder(item.id, order.id)">Удалить товар</button>
             </div>
           </div>
 
@@ -27,6 +27,13 @@
             <p>Цена: {{ order.customDrink.price }} ₽</p>
           </div>
         </div>
+
+        <button 
+          v-if="order.status !== 'doing'" 
+          @click="markOrderAsDoing(order.id)" 
+          class="create-order-btn">
+          Оформить заказ
+        </button>
 
         <button 
           @click="removeOrder(order.id)" 
@@ -40,9 +47,6 @@
     <div v-else>
       <p>У вас нет заказов.</p>
     </div>
-
-    <!-- Кнопка оформления нового заказа -->
-    <button @click="createOrder" class="create-order-btn">Оформить заказ</button>
 
     <Footer />
   </div>
@@ -183,33 +187,28 @@ const isOrderExpired = (order) => {
   return new Date() > pickupTime;
 };
 
-// Функция создания нового заказа
-const createOrder = async () => {
+// Функция изменения статуса заказа на "doing"
+const markOrderAsDoing = async (orderId) => {
   try {
-    const response = await fetch(`http://localhost:3001/api/orders/order/create`, {
-      method: "POST",
+    const response = await fetch(`http://localhost:3001/api/orders/status/${orderId}`, {
+      method: "PUT",
       headers: {
         "Authorization": `Bearer ${document.cookie.split("token=")[1]}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        userId: userId.value,
-        items: [], // Здесь нужно добавить товары для заказа
-        total_price: 1000, // Установить общую цену, можно будет адаптировать по вашему API
-        pickupTime: new Date(new Date().getTime() + 60 * 60 * 1000).toISOString(), // Время забора через 1 час
-      }),
+      body: JSON.stringify({ status: "doing" }),
     });
 
-    if (!response.ok) throw new Error("Ошибка создания заказа");
+    if (!response.ok) throw new Error("Ошибка обновления статуса заказа");
 
-    const newOrder = await response.json();
-    orders.value.push({
-      ...newOrder,
-      total_price: 0, // Пока не будет товаров в заказе, общая цена 0
-    }); // Добавляем новый заказ в список
-    console.log("Новый заказ оформлен", newOrder);
+    // Обновляем статус заказа на "doing" локально
+    const order = orders.value.find(order => order.id === orderId);
+    if (order) {
+      order.status = "doing";
+    }
+    console.log(`Статус заказа ${orderId} обновлен на "doing"`);
   } catch (error) {
-    console.error("Ошибка при создании заказа:", error);
+    console.error("Ошибка при изменении статуса заказа:", error);
   }
 };
 </script>

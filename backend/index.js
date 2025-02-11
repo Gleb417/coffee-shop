@@ -3,7 +3,6 @@ import dotenv from "dotenv";
 import bodyParser from "body-parser";
 import cors from "cors";
 import sequelize from "./config/database.js";
-import CDrinkRouter from "./CDrink/CDrinkRouter.js";
 import orderRouter from "./Order/OrderRouter.js";
 import UserRouter from "./User/UserRouter.js";
 import CategoryRouter from "./Category/CategoryRouter.js";
@@ -34,7 +33,6 @@ app.use("/api/orders", orderRouter);
 app.use("/api/categories", CategoryRouter);
 app.use("/api/subcategory", SubcategoryRouter);
 app.use("/api/product", ProductRouter);
-app.use ("/api/cdrink", CDrinkRouter);
 
 // **Настройка раздачи изображений**
 const uploadPath = path.join(__dirname, "uploads", "product");

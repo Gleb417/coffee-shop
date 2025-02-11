@@ -16,18 +16,11 @@
           class="search-input"
         />
 
-        <select v-model="selectedType" class="filter-select">
-          <option value="">Все десерты</option>
-          <option value="cake">Торты</option>
-          <option value="pie">Пироги</option>
-          <option value="cookie">Печенье</option>
-        </select>
-
-        <select v-model="selectedSize" class="filter-select">
-          <option value="">Любой размер</option>
-          <option value="small">Маленький</option>
-          <option value="medium">Средний</option>
-          <option value="large">Большой</option>
+        <select v-model="selectedWeight" class="filter-select">
+          <option value="">Любой вес</option>
+          <option value="small">Маленький (до 150 г)</option>
+          <option value="medium">Средний (150-350 г)</option>
+          <option value="large">Большой (более 350 г)</option>
         </select>
       </div>
 
@@ -65,8 +58,7 @@ import Footer from "~/components/Footer.vue";
 
 const products = ref([]);
 const searchQuery = ref("");
-const selectedType = ref("");
-const selectedSize = ref("");
+const selectedWeight = ref("");
 
 // Загрузка данных
 onMounted(() => {
@@ -78,7 +70,7 @@ onMounted(() => {
     .catch((error) => console.error("Ошибка загрузки данных:", error));
 });
 
-// Фильтрация десертов
+// Фильтрация десертов по названию и весу
 const filteredDesserts = computed(() => {
   return products.value
     .filter((product) => product.type === "dessert")
@@ -88,13 +80,14 @@ const filteredDesserts = computed(() => {
         : true
     )
     .filter((product) => 
-      selectedType.value 
-        ? product.category === selectedType.value 
-        : true
-    )
-    .filter((product) => 
-      selectedSize.value 
-        ? product.size === selectedSize.value 
+      selectedWeight.value 
+        ? selectedWeight.value === "small"
+          ? product.weight <= 150
+          : selectedWeight.value === "medium"
+          ? product.weight > 150 && product.weight <= 350
+          : selectedWeight.value === "large"
+          ? product.weight > 350
+          : true
         : true
     );
 });

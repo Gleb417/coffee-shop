@@ -1,299 +1,123 @@
 <template>
-  <div class="calculator-page">
+  <div>
     <Header />
-
-    <section class="calculator-container" data-aos="fade-up">
-      <div class="container">
-        <h1>Соберите свой напиток</h1>
-
-        <!-- Шаг 1: Выбор стакана -->
-        <div class="step">
-          <h2>Выберите стакан</h2>
-          <div class="glass-options">
-            <div
-              v-for="glass in glasses"
-              :key="glass.id"
-              class="glass-option"
-              :class="{
-                active: selectedGlass === glass.id,
-                disabled: orderConfirmed,
-              }"
-              @click="selectGlass(glass.id)"
-              :aria-disabled="orderConfirmed ? 'true' : 'false'"
-            >
-              <img :src="glass.image" :alt="glass.name" />
-              <p>{{ glass.name }}</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Шаг 2: Выбор напитка -->
-        <div class="step" v-if="selectedGlass">
-          <h2>Выберите напиток</h2>
-          <div class="drink-options">
-            <div
-              v-for="drink in drinks"
-              :key="drink.id"
-              class="drink-option"
-              :class="{
-                active: selectedDrink === drink.id,
-                disabled: orderConfirmed,
-              }"
-              @click="selectDrink(drink.id)"
-              :aria-disabled="orderConfirmed ? 'true' : 'false'"
-            >
-              <img :src="drink.image" :alt="drink.name" />
-              <p>{{ drink.name }}</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Шаг 3: Меню для выбора чая или сока -->
-        <div v-if="selectedDrink && (selectedDrink === 2 || selectedDrink === 3)" class="step">
-          <h2>Выберите разновидность</h2>
-          <div v-if="selectedDrink === 2" class="drink-varieties">
-            <div
-              v-for="juice in juices"
-              :key="juice.id"
-              class="drink-variety-option"
-              :class="{
-                active: selectedJuice === juice.id,
-                disabled: orderConfirmed,
-              }"
-              @click="selectJuice(juice.id)"
-            >
-              <img :src="juice.image" :alt="juice.name" />
-              <p>{{ juice.name }}</p>
-            </div>
-          </div>
-          <div v-if="selectedDrink === 3" class="drink-varieties">
-            <div
-              v-for="tea in teas"
-              :key="tea.id"
-              class="drink-variety-option"
-              :class="{
-                active: selectedTea === tea.id,
-                disabled: orderConfirmed,
-              }"
-              @click="selectTea(tea.id)"
-            >
-              <img :src="tea.image" :alt="tea.name" />
-              <p>{{ tea.name }}</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Шаг 3: Меню для выбора кофе -->
-        <div v-if="selectedDrink === 1" class="step">
-          <h2>Выберите кофе</h2>
-          <div class="drink-varieties">
-            <div
-              v-for="coffee in coffeeTypes"
-              :key="coffee.id"
-              class="drink-variety-option"
-              :class="{
-                active: selectedCoffee === coffee.id,
-                disabled: orderConfirmed,
-              }"
-              @click="selectCoffee(coffee.id)"
-            >
-              <img :src="coffee.image" :alt="coffee.name" />
-              <p>{{ coffee.name }}</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Шаг 4: С собой или в кофейне -->
-        <div v-if="selectedDrink && (selectedJuice || selectedTea || selectedCoffee)" class="step">
-          <h2>Хотите с собой или в кофейне?</h2>
-          <div class="options">
-            <button
-              :class="{ active: isToGo }"
-              @click="selectOption('toGo')"
-              :disabled="orderConfirmed"
-            >
-              С собой
-            </button>
-            <button
-              :class="{ active: !isToGo }"
-              @click="selectOption('inCafe')"
-              :disabled="orderConfirmed"
-            >
-              В кофейне
-            </button>
-          </div>
-        </div>
-
-        <!-- Шаг 5: Добавки -->
-        <div v-if="isToGo !== null" class="step">
-          <h2>Выберите добавки</h2>
-          <div class="add-ons">
-            <div
-              v-for="addon in addOns"
-              :key="addon.id"
-              class="addon-option"
-              :class="{
-                active: selectedAddOns.includes(addon.id),
-                disabled: orderConfirmed,
-              }"
-              @click="toggleAddOn(addon.id)"
-            >
-              <p>{{ addon.name }}</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Шаг 6: Подтверждение заказа -->
-        <div v-if="selectedAddOns.length > 0 || isToGo !== null" class="step">
-          <button
-            class="confirm-button"
-            @click="confirmOrder"
-            :disabled="orderConfirmed"
-          >
-            Сделать заказ
-          </button>
-        </div>
+    <div class="order-container">
+      <h2>Ваш заказ</h2>
+      <!-- Здесь будет отображаться информация о заказе -->
+      <div v-if="orderConfirmed">
+        <p>{{ notification }}</p>
       </div>
-    </section>
+      <div v-else>
+        <div>
+          <label for="drink">Выберите напиток:</label>
+          <select v-model="selectedDrink">
+            <option :value="1">Кофе</option>
+            <option :value="2">Сок</option>
+            <option :value="3">Чай</option>
+          </select>
+        </div>
 
+        <div>
+          <label for="glass">Выберите стакан:</label>
+          <select v-model="selectedGlass">
+            <option :value="1">Маленький</option>
+            <option :value="2">Средний</option>
+            <option :value="3">Большой</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="addons">Выберите добавки:</label>
+          <select v-model="selectedAddOns" multiple>
+            <option :value="1">Шоколад</option>
+            <option :value="2">Карамель</option>
+            <option :value="3">Молоко</option>
+          </select>
+        </div>
+
+        <button @click="confirmOrder">Подтвердить заказ</button>
+      </div>
+    </div>
     <Footer />
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, onMounted } from "vue";
 import Header from "~/components/Header.vue";
 import Footer from "~/components/Footer.vue";
 import AOS from "aos";
 import "aos/dist/aos.css";
-import small from "@/assets/images/small.png";
-import medium from "@/assets/images/medium.png";
-import large from "@/assets/images/large.png";
-import juice from "@/assets/images/j.png";
-import tea from "@/assets/images/tea.png";
-import coffe from "@/assets/images/coffee1.jpg";
+import Cookies from "js-cookie"; // Подключаем библиотеку для работы с куки
 
-// Стаканы
-const glasses = [
-  { id: 1, name: "Маленький стакан", image: small },
-  { id: 2, name: "Средний стакан", image: medium },
-  { id: 3, name: "Большой стакан", image: large },
-];
-
-// Напитки
-const drinks = [
-  { id: 1, name: "Кофе", image: coffe },
-  { id: 2, name: "Сок", image: juice },
-  { id: 3, name: "Чай", image: tea },
-];
-
-// Виды кофе
-const coffeeTypes = [
-  { id: 1, name: "Эспрессо", image: "assets/images/espresso.jpg" },
-  { id: 2, name: "Латте", image: "assets/images/latte.jpg" },
-  { id: 3, name: "Капучино", image: "assets/images/cappuccino.jpg" },
-];
-
-// Виды соков
-const juices = [
-  { id: 1, name: "Апельсиновый", image: "assets/images/orange-juice.jpg" },
-  { id: 2, name: "Яблочный", image: "assets/images/apple-juice.jpg" },
-  { id: 3, name: "Гранатовый", image: "assets/images/pomegranate-juice.jpg" },
-];
-
-// Виды чая
-const teas = [
-  { id: 1, name: "Черный", image: "assets/images/black-tea.jpg" },
-  { id: 2, name: "Зеленый", image: "assets/images/green-tea.jpg" },
-];
-
-// Добавки
-const addOns = [
-  { id: 1, name: "Молоко", image: "" },
-  { id: 2, name: "Сироп", image: "" },
-  { id: 3, name: "Шоколад", image: "" },
-];
-
+// Данные для выбора
 const selectedGlass = ref(null);
 const selectedDrink = ref(null);
-const selectedCoffee = ref(null);
-const selectedJuice = ref(null);
-const selectedTea = ref(null);
-const isToGo = ref(null);
 const selectedAddOns = ref([]);
 const orderConfirmed = ref(false);
+const notification = ref('');
 
-// Выбор стакана
-const selectGlass = (id) => {
-  if (!orderConfirmed.value) selectedGlass.value = id;
-};
-
-// Выбор напитка
-const selectDrink = (id) => {
-  if (!orderConfirmed.value) {
-    selectedDrink.value = id;
-    selectedCoffee.value = null; // сбрасываем кофе
-    selectedJuice.value = null; // сбрасываем сок
-    selectedTea.value = null; // сбрасываем чай
+// Функция для получения user_id из токена
+const getUserIdFromToken = () => {
+  const token = document.cookie.split("; ").find((row) => row.startsWith("token="))?.split("=")[1];
+  if (!token) {
+    console.log("Токен не найден в куках");
+    return null;
   }
-};
 
-// Выбор кофе
-const selectCoffee = (id) => {
-  if (!orderConfirmed.value) selectedCoffee.value = id;
-};
+  try {
+    // Декодируем токен (предполагаем, что это JWT)
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const decodedData = JSON.parse(window.atob(base64));
 
-// Выбор сока
-const selectJuice = (id) => {
-  if (!orderConfirmed.value) selectedJuice.value = id;
-};
-
-// Выбор чая
-const selectTea = (id) => {
-  if (!orderConfirmed.value) selectedTea.value = id;
-};
-
-// Выбор упаковки (с собой или в кофейне)
-const selectOption = (option) => {
-  if (!orderConfirmed.value) isToGo.value = option === "toGo";
-};
-
-// Добавление/удаление добавок
-const toggleAddOn = (id) => {
-  if (!orderConfirmed.value) {
-    if (selectedAddOns.value.includes(id)) {
-      selectedAddOns.value = selectedAddOns.value.filter(
-        (addon) => addon !== id
-      );
-    } else {
-      selectedAddOns.value.push(id);
+    // Проверка на срок действия токена (если есть)
+    const currentTime = Math.floor(Date.now() / 1000); // текущее время в секундах
+    if (decodedData.exp && decodedData.exp < currentTime) {
+      console.log("Токен истек");
+      return null;
     }
+
+    return decodedData.id; // Получаем id из декодированного токена
+  } catch (error) {
+    console.error("Ошибка при декодировании токена:", error);
+    return null;
   }
 };
 
-// Подтверждение заказа
+// Подтверждение заказа и создание кастомного продукта
 const confirmOrder = async () => {
   orderConfirmed.value = true;
+
+  const userId = getUserIdFromToken();  // Получаем user_id из токена
+  if (!userId) {
+    notification.value = "Пользователь не найден или токен истек!";
+    return;
+  }
+
   const orderDetails = {
-    glass: selectedGlass.value,
-    drink: selectedDrink.value,
-    coffee: selectedCoffee.value,
-    juice: selectedJuice.value,
-    tea: selectedTea.value,
-    option: isToGo.value,
-    addOns: selectedAddOns.value,
+    name: `Кастомный ${selectedDrink.value === 1 ? 'Кофе' : selectedDrink.value === 2 ? 'Сок' : 'Чай'}`,
+    description: `Вы выбрали ${selectedDrink.value === 1 ? 'Кофе' : selectedDrink.value === 2 ? 'Сок' : 'Чай'} с стаканом ${getGlassName()} и добавками: ${getAddOnsNames()}`,
+    price: calculatePrice(),
+    type: 'drink',
+    subcategory_id: selectedDrink.value === 1 ? 2 : 1,
+    size: getGlassSizeEn(),
+    status: 'custom',
+    user_id: userId // Добавляем user_id
   };
-  
-  await addProductToOrder(orderDetails); // Отправляем запрос на добавление товара в заказ
-  setTimeout(() => {
-    window.location.href = "/cart"; // Перенаправляем на страницу корзины
-  }, 500);
+
+  try {
+    const productId = await createCustomProduct(orderDetails);  // Получаем только ID
+    await addProductToOrder(productId); // Передаем полученный productId
+  } catch (error) {
+    notification.value = `Произошла ошибка: ${error.message}`;
+  }
 };
 
-// Функция для добавления товара в заказ через API
-const addProductToOrder = async (orderDetails) => {
+// Функция для создания кастомного продукта
+const createCustomProduct = async (orderDetails) => {
   try {
-    const response = await fetch('https://your-api-url.com/orders', {
+    const response = await fetch('http://localhost:3001/api/product/Product/create', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -302,167 +126,191 @@ const addProductToOrder = async (orderDetails) => {
     });
 
     if (!response.ok) {
-      throw new Error('Ошибка при добавлении товара в заказ');
+      throw new Error('Ошибка при создании продукта');
     }
 
     const responseData = await response.json();
-    console.log('Продукт успешно добавлен в заказ:', responseData);
-    updateCart(responseData);
+    console.log('Продукт успешно создан:', responseData);
+
+    // Извлекаем ID продукта из ответа
+    const productId = responseData.product?.id;
+    if (!productId) {
+      throw new Error('ID продукта не получено');
+    }
+
+    notification.value = 'Товар успешно создан!';
+    return productId;  // Возвращаем только ID продукта
   } catch (error) {
     console.error('Ошибка:', error);
+    notification.value = 'Произошла ошибка при создании товара';
+    throw error;  // Прокидываем ошибку для обработки в confirmOrder
   }
 };
 
-// Функция для обновления корзины
-const updateCart = (orderData) => {
-  let cart = JSON.parse(localStorage.getItem('cart')) || [];
-  cart.push(orderData);
-  localStorage.setItem('cart', JSON.stringify(cart));
+// Функция для добавления товара в заказ
+const addProductToOrder = async (productId) => {
+  const userId = getUserIdFromToken();  // Получаем user_id из токена
+  if (!userId) {
+    notification.value = "Пользователь не найден!";
+    return;
+  }
+
+  try {
+    // 1. Получаем все заказы пользователя
+    const ordersResponse = await fetch(`http://localhost:3001/api/orders/order/user/${userId}`);
+    const orders = await ordersResponse.json();
+
+    // 2. Если заказ существует, добавляем в него товар
+    if (orders.length > 0) {
+      const orderId = orders[0].id;  // Используем ID первого заказа
+
+      // 3. Добавляем товар в заказ
+      const addProductResponse = await fetch('http://localhost:3001/api/orders/orderItem/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          order_id: orderId,  // ID существующего заказа
+          product_id: productId,  // Передаем product_id
+          quantity: 1,  // Количество товара
+          price: calculatePrice(),  // Цена товара
+        }),
+      });
+
+      if (!addProductResponse.ok) {
+        throw new Error('Ошибка при добавлении товара в заказ');
+      }
+
+      const addProductData = await addProductResponse.json();
+      console.log('Продукт добавлен в заказ:', addProductData);
+      notification.value = 'Товар успешно добавлен в заказ!';
+    } else {
+      // 4. Если заказа нет, создаем новый заказ
+      const createOrderResponse = await fetch('http://localhost:3001/api/orders/order/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: userId,  // user_id
+          total_price: "100",  // Сумма заказа (можно динамически вычислять)
+        }),
+      });
+
+      if (!createOrderResponse.ok) {
+        throw new Error('Ошибка при создании заказа');
+      }
+
+      const createOrderData = await createOrderResponse.json();
+      console.log('Новый заказ создан:', createOrderData);
+
+      // 5. После создания нового заказа добавляем товар в него
+      await addProductToOrder(productId);  // Рекурсивно добавляем товар в новый заказ
+    }
+  } catch (error) {
+    console.error('Ошибка:', error);
+    notification.value = 'Произошла ошибка при обработке заказа';
+  }
 };
 
+// Функции для получения имени стакана, добавок и других данных
+const getGlassName = () => {
+  switch (selectedGlass.value) {
+    case 1: return "Маленький";
+    case 2: return "Средний";
+    case 3: return "Большой";
+    default: return "";
+  }
+};
+
+const getAddOnsNames = () => {
+  const addOns = {
+    1: 'Шоколад',
+    2: 'Карамель',
+    3: 'Молоко'
+  };
+  return selectedAddOns.value.map(id => addOns[id]).join(', ');
+};
+
+const getGlassSizeEn = () => {
+  switch (selectedGlass.value) {
+    case 1: return 'small';
+    case 2: return 'medium';
+    case 3: return 'large';
+    default: return '';
+  }
+};
+
+const calculatePrice = () => {
+  let basePrice = 5; // Базовая цена
+  if (selectedGlass.value === 2) basePrice += 1; // Средний стакан
+  if (selectedGlass.value === 3) basePrice += 2; // Большой стакан
+  if (selectedAddOns.value.length > 0) basePrice += selectedAddOns.value.length * 0.5; // Цена за добавки
+  return basePrice;
+};
+
+// Инициализация AOS для анимаций
 onMounted(() => {
-  AOS.init({
-    duration: 1000,
-    once: true,
-  });
+  AOS.init();
 });
 </script>
 
 
 <style scoped>
-@import url("https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Lora:wght@400;700&display=swap");
-
-.calculator-page {
-  background-color: #fff;
-  font-family: "Lora", serif;
+/* Стили для страницы заказа */
+.order-container {
+  padding: 20px;
+  background-color: #f8f8f8;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-h1 {
-  text-align: center;
-  font-size: 36px;
-  margin-top: 50px;
-}
-
-.step {
-  margin-bottom: 30px;
-}
-
-.step h2 {
+h2 {
   font-size: 24px;
   margin-bottom: 20px;
+  color: #333;
 }
 
-.glass-options,
-.drink-options,
-.drink-varieties {
-  display: flex;
-  gap: 20px;
-  justify-content: center;
+label {
+  font-weight: bold;
+  margin-top: 10px;
 }
 
-.glass-option,
-.drink-option,
-.drink-variety-option,
-.addon-option {
-  text-align: center;
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-
-.glass-option.active,
-.drink-option.active,
-.drink-variety-option.active,
-.addon-option.active {
-  transform: scale(1.1);
-}
-
-.glass-option img,
-.drink-option img,
-.drink-variety-option img {
-  width: 80px;
-  height: 80px;
-  object-fit: cover;
-}
-
-.return-home {
-  display: flex;
-  justify-content: center;
-  margin-top: 20px;
-}
-
-.return-home button {
-  font-size: 16px;
-  padding: 10px 20px;
-  background-color: #f39c12;
-  color: #fff;
-  border: none;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.return-home button:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
-}
-
-.confirm-button {
-  display: block;
+select {
   width: 100%;
-  padding: 15px;
-  background-color: #e74c3c;
-  color: white;
-  font-size: 18px;
-  border: none;
-  cursor: pointer;
-  transition: background-color 0.3s;
+  padding: 8px;
+  margin: 5px 0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
 }
 
-.confirm-button:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
-}
-
-.order-content {
-  text-align: center;
-  margin: 20px;
-}
-
-.order-details p {
-  margin: 10px 0;
-}
-
-.options {
-  display: flex;
-  gap: 20px;
-  justify-content: center;
-}
-
-.options button {
+button {
+  margin-top: 20px;
   padding: 10px 20px;
-  background-color: #2980b9;
+  background-color: #4CAF50;
   color: white;
-  font-size: 18px;
   border: none;
   cursor: pointer;
+  border-radius: 4px;
+  font-size: 16px;
 }
 
-.options button:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
+button:hover {
+  background-color: #45a049;
 }
 
-.add-ons {
-  display: flex;
-  gap: 20px;
-  justify-content: center;
+button:focus {
+  outline: none;
 }
 
-footer {
-  margin-top: 40px;
+.notification {
+  color: #4CAF50;
+  font-weight: bold;
+}
+
+.notification-error {
+  color: red;
+  font-weight: bold;
 }
 </style>

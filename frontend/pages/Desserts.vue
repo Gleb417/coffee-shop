@@ -15,31 +15,11 @@
           class="search-input"
         />
 
-        <select v-model="selectedType" class="filter-select">
-          <option value="">Все торты</option>
-          <option value="cream">Кремовые</option>
-          <option value="chocolate">Шоколадные</option>
-          <option value="fruit">Фруктовые</option>
-        </select>
-
-        <select v-model="selectedCakeType" class="filter-select">
-          <option value="">Все типы</option>
-          <option value="layered">Слоеные</option>
-          <option value="crumbly">Рассыпчатые</option>
-        </select>
-
-        <select v-model="selectedSize" class="filter-select">
-          <option value="">Любой размер</option>
-          <option value="small">Маленький</option>
-          <option value="medium">Средний</option>
-          <option value="large">Большой</option>
-        </select>
-
         <select v-model="selectedWeight" class="filter-select">
           <option value="">Любой вес</option>
-          <option value="500">500 г</option>
-          <option value="1000">1000 г</option>
-          <option value="1500">1500 г</option>
+          <option value="small">Маленький (до 150 г)</option>
+          <option value="medium">Средний (150-350 г)</option>
+          <option value="large">Большой (более 350 г)</option>
         </select>
       </div>
 
@@ -58,7 +38,6 @@
           <div class="product-info">
             <h3 class="product-name">{{ product.name }}</h3>
             <p class="product-description">{{ product.description }}</p>
-            <p class="product-size">Размер: {{ product.size }}</p>
             <p class="product-weight">Вес: {{ product.weight }} г</p>
             <p class="product-price">{{ product.price }} ₽</p>
           </div>
@@ -77,9 +56,6 @@ import Footer from "~/components/Footer.vue";
 
 const products = ref([]);
 const searchQuery = ref("");
-const selectedType = ref("");
-const selectedCakeType = ref("");
-const selectedSize = ref("");
 const selectedWeight = ref("");
 
 // Загрузка данных
@@ -102,23 +78,14 @@ const filteredCakes = computed(() => {
         : true
     )
     .filter((product) => 
-      selectedType.value 
-        ? product.category === selectedType.value  // Фильтрация по категории
-        : true
-    )
-    .filter((product) => 
-      selectedCakeType.value 
-        ? product.cakeType === selectedCakeType.value  // Фильтрация по типу торта (слоеный/рассыпчатый)
-        : true
-    )
-    .filter((product) => 
-      selectedSize.value 
-        ? product.size === selectedSize.value  // Фильтрация по размеру
-        : true
-    )
-    .filter((product) => 
       selectedWeight.value 
-        ? product.weight === selectedWeight.value  // Фильтрация по весу
+        ? selectedWeight.value === "small"
+          ? product.weight <= 150
+          : selectedWeight.value === "medium"
+          ? product.weight > 150 && product.weight <= 350
+          : selectedWeight.value === "large"
+          ? product.weight > 350
+          : true
         : true
     );
 });
@@ -228,7 +195,6 @@ h1 {
   margin: 8px 0;
 }
 
-.product-size,
 .product-weight {
   font-size: 0.9rem;
   color: #997a66;
