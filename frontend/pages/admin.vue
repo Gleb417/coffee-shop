@@ -5,52 +5,6 @@
       <h1>Панель администратора</h1>
 
       <div class="accordion">
-        <!-- Секция "Создание нового товара" -->
-        <div class="accordion-item">
-          <button class="accordion-header" @click="toggleSection('createProduct')">
-            Создание нового товара
-          </button>
-          <div class="accordion-body" v-show="activeAccordion === 'createProduct'">
-            <form @submit.prevent="addProduct">
-              <div class="form-group">
-                <label for="name">Название товара:</label>
-                <input type="text" id="name" v-model="newProduct.name" required />
-              </div>
-              <div class="form-group">
-                <label for="description">Описание товара:</label>
-                <textarea id="description" v-model="newProduct.description" required></textarea>
-              </div>
-              <div class="form-group">
-                <label for="price">Цена (₽):</label>
-                <input type="number" id="price" v-model.number="newProduct.price" required />
-              </div>
-              <div class="form-group">
-                <label for="type">Тип:</label>
-                <select id="type" v-model="newProduct.type" required @change="updateSubcategories">
-                  <option value="торт">Торт</option>
-                  <option value="десерт">Десерт</option>
-                  <option value="напиток">Напиток</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="weight">Вес (г):</label>
-                <input type="number" id="weight" v-model.number="newProduct.weight" required />
-              </div>
-              <div class="form-group">
-                <label for="subcategory_id">Подкатегория:</label>
-                <select id="subcategory_id" v-model="newProduct.subcategory_id" required>
-                  <option v-for="sub in subcategories" :key="sub.id" :value="sub.id">{{ sub.name }}</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="image">URL изображения:</label>
-                <input type="text" id="image" v-model="newProduct.image" />
-              </div>
-              <button type="submit">Создать товар</button>
-            </form>
-          </div>
-        </div>
-
         <!-- Секция "Просмотр и удаление товаров" -->
         <div class="accordion-item">
           <button class="accordion-header" @click="toggleSection('viewProducts')">
