@@ -216,4 +216,45 @@ onMounted(() => {
   border-radius: 10px;
   overflow: hidden;
 }
+/* Стили для текстовых полей */
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 12px;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 2px solid #cca763;
+  background-color: #fffaf0;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  outline: none;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  border-color: #ad8c62;
+  box-shadow: 0 0 8px rgba(173, 140, 98, 0.5);
+}
+
+/* Стили для кнопки */
+button[type="submit"] {
+  padding: 15px 40px;
+  background-color: #cca763;
+  color: white;
+  font-size: 1.2rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+button[type="submit"]:hover {
+  background-color: #ad8c62;
+  transform: scale(1.05);
+}
+
+button[type="submit"]:active {
+  background-color: #8b6b45;
+  transform: scale(0.98);
+}
 </style>
